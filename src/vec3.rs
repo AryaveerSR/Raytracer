@@ -1,12 +1,26 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
 
-/// A Struct representing a point in 3D
+/// A struct representing a point in 3D
 /// Same as Vec3 but helps make code more clean
 pub type Point3 = Vec3;
 
-/// A Struct representing a vector in 3D
-#[derive(Clone, Debug)]
+/// A struct representing a vector in 3D
+#[derive(Clone, Debug, Copy)]
 pub struct Vec3(pub f64, pub f64, pub f64);
+
+#[macro_export]
+macro_rules! vec3 {
+    ($x:expr, $y:expr, $z:expr) => {
+        Vec3::new($x, $y, $z)
+    };
+}
+
+#[macro_export]
+macro_rules! point3 {
+    ($x:expr, $y:expr, $z:expr) => {
+        Point3::new($x, $y, $z)
+    };
+}
 
 impl Vec3 {
     pub fn x(&self) -> f64 {
@@ -45,8 +59,8 @@ impl Vec3 {
         self.clone() / self.length()
     }
 
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Vec3(x, y, z)
+    pub fn new<X: Into<f64>, Y: Into<f64>, Z: Into<f64>>(x: X, y: Y, z: Z) -> Self {
+        Vec3(x.into(), y.into(), z.into())
     }
 }
 

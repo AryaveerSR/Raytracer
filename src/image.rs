@@ -1,6 +1,6 @@
 //! Abstractions for interacting with image files.
 
-use crate::structs::Color;
+use crate::color::Color;
 use std::fs;
 
 //TODO: Maybe a image_format trait for implementing multiple file formats ?

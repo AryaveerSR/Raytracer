@@ -1,5 +1,4 @@
-//! `structs.rs`
-//! Some generally helpful structures
+use std::ops::{Add, Mul};
 
 /// A Color struct with some helpful functions.
 #[derive(Clone, Debug)]
@@ -7,6 +6,8 @@ pub struct Color(pub u32);
 
 impl Color {
     pub const WHITE: Color = Color { 0: 0x00FFFFFF };
+    pub const RED: Color = Color { 0: 0x00FF0000 };
+    pub const BLUE: Color = Color { 0: 0x000B0BFF };
     pub const BLACK: Color = Color { 0: 0 };
 
     pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {
@@ -23,6 +24,26 @@ impl Color {
 
     pub fn b(&self) -> u8 {
         (self.0 & 0x000000FF) as u8
+    }
+}
+
+impl Add for Color {
+    type Output = Self;
+
+    fn add(self, rhs: Color) -> Self::Output {
+        Color::from_rgb(self.r() + rhs.r(), self.g() + rhs.g(), self.b() + rhs.b())
+    }
+}
+
+impl Mul<f64> for Color {
+    type Output = Self;
+
+    fn mul(self, scalar: f64) -> Self::Output {
+        Color::from_rgb(
+            (self.r() as f64 * scalar) as u8,
+            (self.g() as f64 * scalar) as u8,
+            (self.b() as f64 * scalar) as u8,
+        )
     }
 }
 
