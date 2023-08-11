@@ -46,26 +46,37 @@ pub fn do_stuff() {
 }
 
 fn ray_color(ray: Ray) -> Color {
-    if does_hit_sphere(point3!(0, 0, -1), 0.5, &ray) {
-        return Color::RED;
+    let t = hits_sphere(point3!(0, 0, -1), 0.5, &ray);
+    if t >= 0.0 {
+        let normal = (ray.at(t) - vec3!(0, 0, -1)).unit_vec();
+        Color::from_rgb(
+            ((normal.x() + 1.0) * 128.0) as u8,
+            ((normal.y() + 1.0) * 128.0) as u8,
+            ((normal.z() + 1.0) * 128.0) as u8,
+        ) * 0.5_f64 // TODO: 6.2 section
+    } else {
+        linear_interpolation(
+            (ray.direction().unit_vec().y() + 1.0) * 0.5,
+            Color::WHITE,
+            Color::BLUE,
+        )
     }
-    linear_interpolation(
-        (ray.direction().unit_vec().y() + 1.0) * 0.5,
-        Color::WHITE,
-        Color::BLUE,
-    )
 }
 
 fn linear_interpolation(step: f64, start: Color, end: Color) -> Color {
     start * (1.0 - step) + end * step
 }
 
-fn does_hit_sphere(center: Point3, radius: f64, ray: &Ray) -> bool {
+fn hits_sphere(center: Point3, radius: f64, ray: &Ray) -> f64 {
     let distance = ray.origin() - center;
     let a_coeff = ray.direction().dot(ray.direction());
     let b_coeff = distance.dot(ray.direction()) * 2.0;
     let c_coeff = distance.dot(distance) - radius.powi(2);
     let discriminant = b_coeff.powi(2) - a_coeff * c_coeff * 4.0;
 
-    discriminant >= 0.0
+    if discriminant >= 0.0 {
+        (-b_coeff - discriminant.sqrt()) / (a_coeff * 2.0)
+    } else {
+        return -1.0;
+    }
 }
