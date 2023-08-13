@@ -1,13 +1,12 @@
-use std::io::Write;
-
-use rand::Rng;
-
 use crate::{
+    interval,
     object::Scene,
     point3,
     structs::{Color, Interval, Point3, Ray, Vec3},
     vec3,
 };
+use rand::Rng;
+use std::io::Write;
 
 pub struct Camera {
     width: u16,
@@ -45,8 +44,9 @@ impl Camera {
     }
 
     fn pixel_sample_square(&self) -> Vec3 {
-        let px = -0.5 + rand::thread_rng().gen_range(0.0..1.0);
-        let py = -0.5 + rand::thread_rng().gen_range(0.0..1.0);
+        let mut rng = rand::thread_rng();
+        let px = -0.5 + rng.gen_range(0.0..1.0);
+        let py = -0.5 + rng.gen_range(0.0..1.0);
 
         (self.pixel_delta_u * px) + (self.pixel_delta_v * py)
     }
@@ -65,7 +65,7 @@ impl Camera {
     }
 
     fn ray_color(ray: Ray, scene: &Scene) -> Color {
-        match scene.does_hit(ray, Interval::new(0, f64::INFINITY)) {
+        match scene.does_hit(ray, interval!(0, f64::INFINITY)) {
             Some(hit) => {
                 let normal = hit.normal();
                 return Color::new(

@@ -1,5 +1,7 @@
 //! Structures representing a point and vector in 3D space.
 
+use super::Interval;
+use rand::Rng;
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Debug, Copy)]
@@ -37,6 +39,18 @@ impl Vec3 {
             (self.1 * rhs.2) - (self.2 * rhs.1),
             (self.0 * rhs.2) - (self.2 * rhs.0),
             (self.0 * rhs.1) - (self.1 * rhs.0),
+        )
+    }
+
+    /// Both min and max are **inclusive**
+    pub fn random(interval: Interval) -> Vec3 {
+        let mut rng = rand::thread_rng();
+        let min = interval.min;
+        let max = interval.max;
+        Vec3(
+            rng.gen_range(min..=max),
+            rng.gen_range(min..=max),
+            rng.gen_range(min..=max),
         )
     }
 

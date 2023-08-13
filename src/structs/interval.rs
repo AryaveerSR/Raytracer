@@ -55,3 +55,10 @@ impl Interval {
         }
     }
 }
+
+#[macro_export]
+macro_rules! interval {
+    ($min:expr, $max:expr) => {
+        Interval::new($min, $max)
+    };
+}
