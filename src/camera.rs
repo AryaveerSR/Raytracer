@@ -68,18 +68,18 @@ impl Camera {
         match scene.does_hit(ray, interval!(0, f64::INFINITY)) {
             Some(hit) => {
                 let normal = hit.normal();
-                return Color::new(
+                Color::new(
                     ((normal.x() + 1.0) * 128.0) as u8,
                     ((normal.y() + 1.0) * 128.0) as u8,
                     ((normal.z() + 1.0) * 128.0) as u8,
-                ) * 0.5_f64;
+                ) * 0.5_f64
             }
             None => {
-                return linear_interpolation(
+                linear_interpolation(
                     (ray.direction().unit_vec().y() + 1.0) * 0.5,
                     Color::WHITE,
                     Color::BLUE,
-                );
+                )
             }
         }
     }

@@ -55,7 +55,7 @@ impl Vec3 {
     }
 
     pub fn unit_vec(&self) -> Vec3 {
-        self.clone() / self.length()
+        *self / self.length()
     }
 
     pub fn new<X: Into<f64>, Y: Into<f64>, Z: Into<f64>>(x: X, y: Y, z: Z) -> Self {
@@ -67,11 +67,7 @@ impl Add for Vec3 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Self {
-            0: self.0 + rhs.0,
-            1: self.1 + rhs.1,
-            2: self.2 + rhs.2,
-        }
+        Self(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
     }
 }
 
@@ -79,11 +75,7 @@ impl Sub for Vec3 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Self {
-            0: self.0 - rhs.0,
-            1: self.1 - rhs.1,
-            2: self.2 - rhs.2,
-        }
+        Self(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
     }
 }
 
@@ -91,11 +83,7 @@ impl Mul<Self> for Vec3 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        Self {
-            0: self.0 * rhs.0,
-            1: self.1 * rhs.1,
-            2: self.2 * rhs.2,
-        }
+        Self(self.0 * rhs.0, self.1 * rhs.1, self.2 * rhs.2)
     }
 }
 
@@ -104,11 +92,7 @@ impl<T: Into<f64>> Mul<T> for Vec3 {
 
     fn mul(self, scalar: T) -> Self::Output {
         let scalar = scalar.into();
-        Self {
-            0: self.0 * scalar,
-            1: self.1 * scalar,
-            2: self.2 * scalar,
-        }
+        Self(self.0 * scalar, self.1 * scalar, self.2 * scalar)
     }
 }
 
@@ -116,11 +100,7 @@ impl Div for Vec3 {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
-        Self {
-            0: self.0 / rhs.0,
-            1: self.1 / rhs.1,
-            2: self.2 / rhs.2,
-        }
+        Self(self.0 / rhs.0, self.1 / rhs.1, self.2 / rhs.2)
     }
 }
 
@@ -129,11 +109,7 @@ impl<T: Into<f64>> Div<T> for Vec3 {
 
     fn div(self, scalar: T) -> Self::Output {
         let scalar = scalar.into();
-        Self {
-            0: self.0 / scalar,
-            1: self.1 / scalar,
-            2: self.2 / scalar,
-        }
+        Self(self.0 / scalar, self.1 / scalar, self.2 / scalar)
     }
 }
 
@@ -191,11 +167,7 @@ impl Neg for Vec3 {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Self {
-            0: -self.0,
-            1: -self.1,
-            2: -self.2,
-        }
+        Self(-self.0, -self.1, -self.2)
     }
 }
 
