@@ -19,9 +19,12 @@ impl HitData {
             point,
             time,
             normal: vec3!(0, 0, 0),
-            // This should be reassigned with `set_face_and_normal`.
             is_front_face: true,
         }
+    }
+
+    pub fn point(&self) -> Point3 {
+        self.point
     }
 
     pub fn normal(&self) -> Vec3 {
@@ -91,6 +94,21 @@ impl Sphere {
         Sphere {
             center,
             radius: radius.into(),
+        }
+    }
+
+    pub fn random_unit_vector(normal: Vec3) -> Vec3 {
+        let vector = loop {
+            let p = Vec3::random(Interval::new(-1, 1));
+            if p.length_squared() < 1.0 {
+                break p.unit_vec();
+            }
+        };
+
+        if vector.dot(normal) > 0.0 {
+            return vector;
+        } else {
+            return -vector;
         }
     }
 }

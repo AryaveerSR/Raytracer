@@ -8,12 +8,12 @@ use file::{FileWriter, PPMFile};
 use object::{Scene, Sphere};
 use structs::Point3;
 
-const WIDTH: u16 = 400;
+const WIDTH: u16 = 800;
 const HEIGHT: u16 = 400;
 
 const FOCAL_LENGTH: f64 = 1.0;
 const VIEWPORT_HEIGHT: f64 = 2.0;
-const VIEWPORT_WIDTH: f64 = VIEWPORT_HEIGHT;
+const VIEWPORT_WIDTH: f64 = VIEWPORT_HEIGHT * 2.0;
 
 pub fn run() {
     let mut scene = Scene::new();

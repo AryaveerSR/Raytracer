@@ -1,6 +1,6 @@
 use crate::{
     interval,
-    object::Scene,
+    object::{Scene, Sphere},
     point3,
     structs::{Color, Interval, Point3, Ray, Vec3},
     vec3,
@@ -20,13 +20,15 @@ pub struct Camera {
 
 impl Camera {
     const SAMPLES: u16 = 10;
+    const MAX_BOUNCES: u8 = 10;
+
     pub fn render(&self, writer: &mut dyn Write, scene: &Scene) {
         for i in 0..self.height {
             for j in 0..self.width {
                 let mut color = Color::new(0_u16, 0_u16, 0_u16);
                 for _ in 0..(Self::SAMPLES) {
                     let ray = self.get_ray(i, j);
-                    color += Camera::ray_color(ray, scene);
+                    color += Camera::ray_color(ray, scene, Self::MAX_BOUNCES);
                 }
 
                 self.write_color(writer, color);
@@ -64,23 +66,22 @@ impl Camera {
         writeln!(writer, "{} {} {}", r, g, b).unwrap();
     }
 
-    fn ray_color(ray: Ray, scene: &Scene) -> Color {
-        match scene.does_hit(ray, interval!(0, f64::INFINITY)) {
+    fn ray_color(ray: Ray, scene: &Scene, bounces: u8) -> Color {
+        if bounces <= 0 {
+            return Color::new(0_u16, 0_u16, 0_u16);
+        }
+        match scene.does_hit(ray, interval!(0.01, f64::INFINITY)) {
             Some(hit) => {
                 let normal = hit.normal();
-                Color::new(
-                    ((normal.x() + 1.0) * 128.0) as u8,
-                    ((normal.y() + 1.0) * 128.0) as u8,
-                    ((normal.z() + 1.0) * 128.0) as u8,
-                ) * 0.5_f64
+
+                let direction = hit.normal() + Sphere::random_unit_vector(normal);
+                Self::ray_color(Ray::new(hit.point(), direction), scene, bounces - 1) * 0.5_f64
             }
-            None => {
-                linear_interpolation(
-                    (ray.direction().unit_vec().y() + 1.0) * 0.5,
-                    Color::WHITE,
-                    Color::BLUE,
-                )
-            }
+            None => linear_interpolation(
+                (ray.direction().unit_vec().y() + 1.0) * 0.5,
+                Color::WHITE,
+                Color::BLUE,
+            ),
         }
     }
 
