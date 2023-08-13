@@ -1,3 +1,3 @@
 fn main() {
-    raytracing::do_stuff();
+    raytracing::run();
 }

@@ -1,26 +1,11 @@
+//! Structures representing a point and vector in 3D space.
+
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
 
-/// A struct representing a point in 3D
-/// Same as Vec3 but helps make code more clean
-pub type Point3 = Vec3;
-
-/// A struct representing a vector in 3D
 #[derive(Clone, Debug, Copy)]
-pub struct Vec3(pub f64, pub f64, pub f64);
+pub struct Vec3(f64, f64, f64);
 
-#[macro_export]
-macro_rules! vec3 {
-    ($x:expr, $y:expr, $z:expr) => {
-        Vec3::new($x, $y, $z)
-    };
-}
-
-#[macro_export]
-macro_rules! point3 {
-    ($x:expr, $y:expr, $z:expr) => {
-        Point3::new($x, $y, $z)
-    };
-}
+pub type Point3 = Vec3;
 
 impl Vec3 {
     pub fn x(&self) -> f64 {
@@ -64,7 +49,6 @@ impl Vec3 {
     }
 }
 
-// A whole lot of boring impls
 impl Add for Vec3 {
     type Output = Self;
 
@@ -101,10 +85,11 @@ impl Mul<Self> for Vec3 {
     }
 }
 
-impl Mul<f64> for Vec3 {
+impl<T: Into<f64>> Mul<T> for Vec3 {
     type Output = Self;
 
-    fn mul(self, scalar: f64) -> Self::Output {
+    fn mul(self, scalar: T) -> Self::Output {
+        let scalar = scalar.into();
         Self {
             0: self.0 * scalar,
             1: self.1 * scalar,
@@ -125,10 +110,11 @@ impl Div for Vec3 {
     }
 }
 
-impl Div<f64> for Vec3 {
+impl<T: Into<f64>> Div<T> for Vec3 {
     type Output = Self;
 
-    fn div(self, scalar: f64) -> Self::Output {
+    fn div(self, scalar: T) -> Self::Output {
+        let scalar = scalar.into();
         Self {
             0: self.0 / scalar,
             1: self.1 / scalar,
@@ -161,8 +147,9 @@ impl MulAssign for Vec3 {
     }
 }
 
-impl MulAssign<f64> for Vec3 {
-    fn mul_assign(&mut self, scalar: f64) {
+impl<T: Into<f64>> MulAssign<T> for Vec3 {
+    fn mul_assign(&mut self, scalar: T) {
+        let scalar = scalar.into();
         self.0 *= scalar;
         self.1 *= scalar;
         self.2 *= scalar;
@@ -177,8 +164,9 @@ impl DivAssign for Vec3 {
     }
 }
 
-impl DivAssign<f64> for Vec3 {
-    fn div_assign(&mut self, scalar: f64) {
+impl<T: Into<f64>> DivAssign<T> for Vec3 {
+    fn div_assign(&mut self, scalar: T) {
+        let scalar = scalar.into();
         self.0 /= scalar;
         self.1 /= scalar;
         self.2 /= scalar;
@@ -208,4 +196,18 @@ impl Index<u8> for Vec3 {
             _ => panic!("Out of bounds"),
         }
     }
+}
+
+#[macro_export]
+macro_rules! vec3 {
+    ($x:expr, $y:expr, $z:expr) => {
+        Vec3::new($x, $y, $z)
+    };
+}
+
+#[macro_export]
+macro_rules! point3 {
+    ($x:expr, $y:expr, $z:expr) => {
+        Point3::new($x, $y, $z)
+    };
 }

@@ -1,7 +1,8 @@
-use crate::vec3::{Point3, Vec3};
+//! A structure representing a ray in 3D space.
 
-/// A struct representing a ray
-#[derive(Clone, Debug)]
+use crate::structs::vec3::{Point3, Vec3};
+
+#[derive(Clone, Debug, Copy)]
 pub struct Ray {
     origin: Point3,
     direction: Vec3,
@@ -16,8 +17,8 @@ impl Ray {
         self.direction
     }
 
-    pub fn at(&self, t: f64) -> Point3 {
-        self.origin + self.direction * t
+    pub fn at<T: Into<f64>>(&self, t: T) -> Point3 {
+        self.origin + self.direction * t.into()
     }
 
     pub fn new(origin: Point3, direction: Vec3) -> Self {
