@@ -17,6 +17,11 @@ impl Interval {
         max: f64::NEG_INFINITY,
     };
 
+    pub const INTENSITY: Interval = Interval {
+        min: 0.000,
+        max: 0.999,
+    };
+
     pub fn contains<T: Into<f64>>(&self, t: T) -> bool {
         let t = t.into();
         (self.min <= t) & (self.max >= t)
@@ -29,6 +34,18 @@ impl Interval {
 
     pub fn excludes<T: Into<f64>>(&self, t: T) -> bool {
         !self.surrounds(t)
+    }
+
+    pub fn clamp<T: Into<f64>>(&self, t: T) -> f64 {
+        let t = t.into();
+
+        if t < self.min {
+            self.min
+        } else if t > self.max {
+            self.max
+        } else {
+            t
+        }
     }
 
     pub fn new<X: Into<f64>, Y: Into<f64>>(min: X, max: Y) -> Self {
