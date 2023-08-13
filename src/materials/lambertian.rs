@@ -1,6 +1,6 @@
 use super::Material;
 use crate::{
-    object::HitData,
+    objects::HitData,
     structs::{Interval, Ray, Vec3},
 };
 

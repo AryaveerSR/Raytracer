@@ -1,4 +1,4 @@
-use crate::{object::HitData, structs::Ray};
+use crate::{objects::HitData, structs::Ray};
 
 pub trait Material {
     fn scatter(&self, hit: HitData) -> (Ray, f64);

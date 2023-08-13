@@ -1,6 +1,6 @@
 use crate::{
     interval,
-    object::{Scene, Sphere},
+    objects::{Scene, Sphere},
     point3,
     structs::{Color, Interval, Point3, Ray, Vec3},
     vec3,
@@ -71,10 +71,8 @@ impl Camera {
         }
         match scene.does_hit(ray, interval!(0.01, f64::INFINITY)) {
             Some(hit) => {
-                let normal = hit.normal();
-
-                let direction = hit.normal() + Sphere::random_unit_vector(normal);
-                Self::ray_color(Ray::new(hit.point(), direction), scene, bounces - 1) * 0.7
+                let (ray, scale) = hit.material.scatter(hit.clone());
+                Self::ray_color(ray, scene, bounces - 1) * scale
             }
             None => linear_interpolation(
                 (ray.direction().unit_vec().y() + 1.0) * 0.5,
