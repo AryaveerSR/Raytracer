@@ -11,7 +11,6 @@ use std::io::Write;
 pub struct Camera {
     width: u16,
     height: u16,
-
     first_pixel: Point3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
@@ -75,7 +74,7 @@ impl Camera {
                 let normal = hit.normal();
 
                 let direction = hit.normal() + Sphere::random_unit_vector(normal);
-                Self::ray_color(Ray::new(hit.point(), direction), scene, bounces - 1) * 0.5_f64
+                Self::ray_color(Ray::new(hit.point(), direction), scene, bounces - 1) * 0.7
             }
             None => linear_interpolation(
                 (ray.direction().unit_vec().y() + 1.0) * 0.5,

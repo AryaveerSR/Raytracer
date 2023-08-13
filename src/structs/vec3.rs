@@ -10,6 +10,8 @@ pub struct Vec3(f64, f64, f64);
 pub type Point3 = Vec3;
 
 impl Vec3 {
+    const NEAR_ZERO_OFFSET: f64 = 1e-8;
+
     pub fn x(&self) -> f64 {
         self.0
     }
@@ -40,6 +42,12 @@ impl Vec3 {
             (self.0 * rhs.2) - (self.2 * rhs.0),
             (self.0 * rhs.1) - (self.1 * rhs.0),
         )
+    }
+
+    pub fn near_zero(&self) -> bool {
+        (self.0.abs() < Self::NEAR_ZERO_OFFSET)
+            & (self.1.abs() < Self::NEAR_ZERO_OFFSET)
+            & (self.2.abs() < Self::NEAR_ZERO_OFFSET)
     }
 
     /// Both min and max are **inclusive**

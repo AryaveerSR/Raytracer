@@ -1,6 +1,8 @@
 pub mod camera;
 pub mod file;
+pub mod materials;
 pub mod object;
+pub mod objects;
 pub mod structs;
 
 use camera::Camera;

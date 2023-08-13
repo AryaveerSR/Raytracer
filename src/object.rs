@@ -85,8 +85,8 @@ impl Scene {
 }
 
 pub struct Sphere {
-    pub center: Point3,
-    pub radius: f64,
+    center: Point3,
+    radius: f64,
 }
 
 impl Sphere {
@@ -97,6 +97,7 @@ impl Sphere {
         }
     }
 
+    //todo! remove
     pub fn random_unit_vector(normal: Vec3) -> Vec3 {
         let vector = loop {
             let p = Vec3::random(Interval::new(-1, 1));
