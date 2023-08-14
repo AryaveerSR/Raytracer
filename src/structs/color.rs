@@ -4,9 +4,9 @@ use std::ops::{Add, AddAssign, Mul};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Color {
-    r: u16,
-    g: u16,
-    b: u16,
+    r: i32,
+    g: i32,
+    b: i32,
 }
 
 impl Color {
@@ -23,15 +23,15 @@ impl Color {
         b: 255,
     };
 
-    pub fn r(&self) -> u16 {
+    pub fn r(&self) -> i32 {
         self.r
     }
 
-    pub fn g(&self) -> u16 {
+    pub fn g(&self) -> i32 {
         self.g
     }
 
-    pub fn b(&self) -> u16 {
+    pub fn b(&self) -> i32 {
         self.b
     }
 
@@ -39,7 +39,7 @@ impl Color {
         format!("{} {} {}", self.r(), self.g(), self.b())
     }
 
-    pub fn new<X: Into<u16>, Y: Into<u16>, Z: Into<u16>>(r: X, g: Y, b: Z) -> Self {
+    pub fn new<X: Into<i32>, Y: Into<i32>, Z: Into<i32>>(r: X, g: Y, b: Z) -> Self {
         Color {
             r: r.into(),
             g: g.into(),
@@ -66,7 +66,7 @@ impl AddAssign for Color {
     }
 }
 
-impl<T: Into<u16>> Add<T> for Color {
+impl<T: Into<i32>> Add<T> for Color {
     type Output = Self;
 
     fn add(self, rhs: T) -> Self::Output {
@@ -75,7 +75,7 @@ impl<T: Into<u16>> Add<T> for Color {
     }
 }
 
-impl<T: Into<u16>> AddAssign<T> for Color {
+impl<T: Into<i32>> AddAssign<T> for Color {
     fn add_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
         *self = Color {
@@ -92,9 +92,28 @@ impl<T: Into<f64>> Mul<T> for Color {
     fn mul(self, scalar: T) -> Self::Output {
         let scalar = scalar.into();
         Color::new(
-            (self.r() as f64 * scalar) as u8,
-            (self.g() as f64 * scalar) as u8,
-            (self.b() as f64 * scalar) as u8,
+            (self.r() as f64 * scalar) as i32,
+            (self.g() as f64 * scalar) as i32,
+            (self.b() as f64 * scalar) as i32,
         )
     }
+}
+
+impl Mul for Color {
+    type Output = Self;
+
+    fn mul(self, color: Color) -> Self::Output {
+        Color::new(
+            (self.r() as f64 * color.r() as f64) as i32,
+            (self.g() as f64 * color.g() as f64) as i32,
+            (self.b() as f64 * color.b() as f64) as i32,
+        )
+    }
+}
+
+#[macro_export]
+macro_rules! color {
+    ($r:expr, $g:expr, $b:expr) => {
+        crate::structs::Color::new($r, $g, $b)
+    };
 }

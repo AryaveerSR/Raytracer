@@ -1,12 +1,13 @@
 use crate::{
-    interval,
-    objects::{Scene, Sphere},
+    color, interval,
+    objects::Scene,
     point3,
     structs::{Color, Interval, Point3, Ray, Vec3},
     vec3,
 };
 use rand::Rng;
-use std::io::Write;
+use rayon::{ThreadPool, ThreadPoolBuilder};
+use std::{io::Write, os::windows::thread};
 
 pub struct Camera {
     width: u16,
@@ -17,21 +18,26 @@ pub struct Camera {
     center: Point3,
 }
 
+/*for j in 0..self.width {
+    let mut color = color!(0, 0, 0);
+    for _ in 0..(Self::SAMPLES) {
+        let ray = self.get_ray(i, j);
+        color += Camera::ray_color(ray, scene, Self::MAX_BOUNCES);
+    }
+
+    self.write_color(writer, color);
+} */
+
 impl Camera {
     const SAMPLES: u16 = 10;
     const MAX_BOUNCES: u8 = 10;
 
     pub fn render(&self, writer: &mut dyn Write, scene: &Scene) {
-        for i in 0..self.height {
-            for j in 0..self.width {
-                let mut color = Color::new(0_u16, 0_u16, 0_u16);
-                for _ in 0..(Self::SAMPLES) {
-                    let ray = self.get_ray(i, j);
-                    color += Camera::ray_color(ray, scene, Self::MAX_BOUNCES);
-                }
+        //let thread_pool = ThreadPoolBuilder::new().num_threads(8).build().unwrap();
 
-                self.write_color(writer, color);
-            }
+        for i in 0..self.height {
+            println!("{} out of {}", i, self.height);
+            //thread_pool.install(op)
         }
     }
 
@@ -67,12 +73,22 @@ impl Camera {
 
     fn ray_color(ray: Ray, scene: &Scene, bounces: u8) -> Color {
         if bounces <= 0 {
-            return Color::new(0_u16, 0_u16, 0_u16);
+            return color!(0, 0, 0);
         }
-        match scene.does_hit(ray, interval!(0.01, f64::INFINITY)) {
+        match scene.does_hit(ray, interval!(0.1, f64::INFINITY)) {
             Some(hit) => {
-                let (ray, scale) = hit.material.scatter(hit.clone());
-                Self::ray_color(ray, scene, bounces - 1) * scale
+                let (mut ray, albedo) = hit.material.scatter(hit.clone(), ray);
+
+                if ray.direction().near_zero() {
+                    ray = Ray::new(hit.point(), hit.normal());
+                }
+
+                let ray_color = Self::ray_color(ray, scene, bounces - 1);
+                return Color::new(
+                    (ray_color.r() as f64 * (albedo.r() as f64) / 255.0) as i32,
+                    (ray_color.g() as f64 * (albedo.g() as f64) / 255.0) as i32,
+                    (ray_color.b() as f64 * (albedo.b() as f64) / 255.0) as i32,
+                );
             }
             None => linear_interpolation(
                 (ray.direction().unit_vec().y() + 1.0) * 0.5,

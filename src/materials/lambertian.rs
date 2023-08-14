@@ -1,18 +1,16 @@
 use super::Material;
 use crate::{
     objects::HitData,
-    structs::{Interval, Ray, Vec3},
+    structs::{Color, Interval, Ray, Vec3},
 };
 
 pub struct Lambertian {
-    albedo: f64,
+    albedo: Color,
 }
 
 impl Lambertian {
-    pub fn new<T: Into<f64>>(albedo: T) -> Self {
-        Lambertian {
-            albedo: albedo.into(),
-        }
+    pub fn new(albedo: Color) -> Self {
+        Lambertian { albedo }
     }
 
     fn random_unit_vector(normal: Vec3) -> Vec3 {
@@ -32,12 +30,8 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, hit: HitData) -> (Ray, f64) {
-        let mut direction = hit.normal() + Lambertian::random_unit_vector(hit.normal());
-        if direction.near_zero() {
-            direction = hit.normal();
-        }
-
+    fn scatter(&self, hit: HitData, _: Ray) -> (Ray, Color) {
+        let direction = hit.normal() + Lambertian::random_unit_vector(hit.normal());
         (Ray::new(hit.point(), direction), self.albedo)
     }
 }
