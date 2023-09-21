@@ -31,7 +31,7 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, hit: HitData, _: Ray) -> (Ray, Color) {
-        let direction = hit.normal() + Lambertian::random_unit_vector(hit.normal());
+        let direction = hit.normal() + Self::random_unit_vector(hit.normal());
         (Ray::new(hit.point(), direction), self.albedo)
     }
 }

@@ -7,3 +7,4 @@ author = "AryaveerSR <me.aryaveer@gmail.com"
 [dependencies]
 rand = "0.8.4"
 rayon = "1.7.0"
+once_cell = "1.18.0"

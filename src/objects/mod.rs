@@ -3,7 +3,7 @@ use crate::{
     structs::{Interval, Point3, Ray, Vec3},
     vec3,
 };
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct HitData {
@@ -11,11 +11,11 @@ pub struct HitData {
     normal: Vec3,
     time: f64,
     is_front_face: bool,
-    pub material: Rc<dyn Material>,
+    pub material: Arc<dyn Material + Sync + Send>,
 }
 
 impl HitData {
-    pub fn new(point: Point3, time: f64, material: Rc<dyn Material>) -> Self {
+    pub fn new(point: Point3, time: f64, material: Arc<dyn Material + Sync + Send>) -> Self {
         HitData {
             point,
             time,
@@ -23,6 +23,10 @@ impl HitData {
             is_front_face: true,
             material,
         }
+    }
+
+    pub fn is_front_face(&self) -> bool {
+        self.is_front_face
     }
 
     pub fn point(&self) -> Point3 {
@@ -47,11 +51,11 @@ impl HitData {
 
 pub trait Object {
     fn does_hit(&self, ray: Ray, interval: Interval) -> Option<HitData>;
-    fn material(&self) -> Rc<dyn Material>;
+    fn material(&self) -> Arc<dyn Material + Sync + Send>;
 }
 
 pub struct Scene {
-    objects: Vec<Box<dyn Object>>,
+    objects: Vec<Box<dyn Object + Sync + Send>>,
 }
 
 impl Scene {
@@ -59,7 +63,7 @@ impl Scene {
         self.objects.clear();
     }
 
-    pub fn add(&mut self, obj: Box<dyn Object>) {
+    pub fn add(&mut self, obj: Box<dyn Object + Sync + Send>) {
         self.objects.push(obj);
     }
 

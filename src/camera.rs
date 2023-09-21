@@ -1,13 +1,15 @@
 use crate::{
-    color, interval,
-    objects::Scene,
-    point3,
+    color, interval, point3,
     structs::{Color, Interval, Point3, Ray, Vec3},
-    vec3,
+    vec3, SCENE,
 };
 use rand::Rng;
-use rayon::{ThreadPool, ThreadPoolBuilder};
-use std::{io::Write, os::windows::thread};
+use rayon::prelude::{IntoParallelIterator, ParallelIterator};
+use std::{
+    collections::HashMap,
+    io::Write,
+    sync::{mpsc, Arc},
+};
 
 pub struct Camera {
     width: u16,
@@ -18,26 +20,61 @@ pub struct Camera {
     center: Point3,
 }
 
-/*for j in 0..self.width {
-    let mut color = color!(0, 0, 0);
-    for _ in 0..(Self::SAMPLES) {
-        let ray = self.get_ray(i, j);
-        color += Camera::ray_color(ray, scene, Self::MAX_BOUNCES);
-    }
-
-    self.write_color(writer, color);
-} */
-
 impl Camera {
     const SAMPLES: u16 = 10;
     const MAX_BOUNCES: u8 = 10;
 
-    pub fn render(&self, writer: &mut dyn Write, scene: &Scene) {
-        //let thread_pool = ThreadPoolBuilder::new().num_threads(8).build().unwrap();
+    pub fn render(&self, writer: &mut dyn Write) {
+        let (sender, receiver) = mpsc::channel::<(u16, Arc<Vec<Color>>)>();
 
-        for i in 0..self.height {
-            println!("{} out of {}", i, self.height);
-            //thread_pool.install(op)
+        (0..(self.height))
+            .into_par_iter()
+            .for_each_with(sender, |s, i| {
+                let mut pixels = vec![];
+
+                for j in 0..(self.width) {
+                    let mut color = color!(0, 0, 0);
+
+                    for _ in 0..(Self::SAMPLES) {
+                        let ray = self.get_ray(i, j);
+                        color += Camera::ray_color(ray, Self::MAX_BOUNCES);
+                    }
+
+                    let color = Self::average_samples(color);
+                    pixels.push(color);
+                }
+
+                s.send((i, Arc::new(pixels))).unwrap();
+            });
+
+        let mut current_pending_row: u16 = 0;
+        let mut row_hashes: HashMap<u16, Arc<Vec<Color>>> = HashMap::new(); //todo! is hashmap the best structure to use ?
+
+        while current_pending_row < self.height {
+            let val = receiver.try_recv(); //todo! better variables
+
+            if val.is_ok() {
+                let (i, row) = val.unwrap();
+
+                if i == current_pending_row {
+                    Self::write_row(row, writer);
+                    current_pending_row += 1;
+                } else {
+                    row_hashes.insert(i, row);
+                }
+            } else {
+                if row_hashes.contains_key(&current_pending_row) {
+                    let row = row_hashes.remove(&current_pending_row).unwrap();
+                    Self::write_row(row, writer);
+                    current_pending_row += 1;
+                }
+            }
+        }
+    }
+
+    fn write_row(row: Arc<Vec<Color>>, writer: &mut dyn Write) {
+        for pixel in row.iter() {
+            writeln!(writer, "{} {} {}", pixel.r(), pixel.g(), pixel.b()).unwrap();
         }
     }
 
@@ -52,30 +89,28 @@ impl Camera {
 
     fn pixel_sample_square(&self) -> Vec3 {
         let mut rng = rand::thread_rng();
+
         let px = -0.5 + rng.gen_range(0.0..1.0);
         let py = -0.5 + rng.gen_range(0.0..1.0);
 
         (self.pixel_delta_u * px) + (self.pixel_delta_v * py)
     }
 
-    fn write_color(&self, writer: &mut dyn Write, color: Color) {
-        let r = color.r();
-        let g = color.g();
-        let b = color.b();
-
+    fn average_samples(color: Color) -> Color {
         let scale = 1.0 / Self::SAMPLES as f64;
-        let r = scale * r as f64;
-        let g = scale * g as f64;
-        let b = scale * b as f64;
 
-        writeln!(writer, "{} {} {}", r, g, b).unwrap();
+        let r = scale * color.r() as f64;
+        let g = scale * color.g() as f64;
+        let b = scale * color.b() as f64;
+
+        Color::new(r as i32, g as i32, b as i32)
     }
 
-    fn ray_color(ray: Ray, scene: &Scene, bounces: u8) -> Color {
+    fn ray_color(ray: Ray, bounces: u8) -> Color {
         if bounces <= 0 {
             return color!(0, 0, 0);
         }
-        match scene.does_hit(ray, interval!(0.1, f64::INFINITY)) {
+        match SCENE.does_hit(ray, interval!(0.1, f64::INFINITY)) {
             Some(hit) => {
                 let (mut ray, albedo) = hit.material.scatter(hit.clone(), ray);
 
@@ -83,7 +118,7 @@ impl Camera {
                     ray = Ray::new(hit.point(), hit.normal());
                 }
 
-                let ray_color = Self::ray_color(ray, scene, bounces - 1);
+                let ray_color = Self::ray_color(ray, bounces - 1);
                 return Color::new(
                     (ray_color.r() as f64 * (albedo.r() as f64) / 255.0) as i32,
                     (ray_color.g() as f64 * (albedo.g() as f64) / 255.0) as i32,

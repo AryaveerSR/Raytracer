@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use super::{HitData, Object};
 use crate::{
@@ -9,11 +9,15 @@ use crate::{
 pub struct Sphere {
     center: Point3,
     radius: f64,
-    material: Rc<dyn Material>,
+    material: Arc<dyn Material + Sync + Send>,
 }
 
 impl Sphere {
-    pub fn new<T: Into<f64>>(center: Point3, radius: T, material: Rc<dyn Material>) -> Self {
+    pub fn new<T: Into<f64>>(
+        center: Point3,
+        radius: T,
+        material: Arc<dyn Material + Sync + Send>,
+    ) -> Self {
         Sphere {
             center,
             radius: radius.into(),
@@ -23,7 +27,7 @@ impl Sphere {
 }
 
 impl Object for Sphere {
-    fn material(&self) -> Rc<dyn Material> {
+    fn material(&self) -> Arc<dyn Material + Sync + Send> {
         self.material.clone()
     }
 

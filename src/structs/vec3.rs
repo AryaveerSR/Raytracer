@@ -79,11 +79,29 @@ impl Add for Vec3 {
     }
 }
 
+impl<T: Into<f64>> Add<T> for Vec3 {
+    type Output = Self;
+
+    fn add(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
+        Self(self.0 + rhs, self.1 + rhs, self.2 + rhs)
+    }
+}
+
 impl Sub for Vec3 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
         Self(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+    }
+}
+
+impl<T: Into<f64>> Sub<T> for Vec3 {
+    type Output = Self;
+
+    fn sub(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
+        Self(self.0 - rhs, self.1 - rhs, self.2 - rhs)
     }
 }
 

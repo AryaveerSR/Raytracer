@@ -8,7 +8,8 @@ use camera::Camera;
 use file::{FileWriter, PPMFile};
 use materials::{Lambertian, Metal};
 use objects::{Scene, Sphere};
-use std::rc::Rc;
+use once_cell::sync::Lazy;
+use std::sync::Arc;
 use structs::Point3;
 
 const WIDTH: u16 = 800;
@@ -18,31 +19,30 @@ const FOCAL_LENGTH: f64 = 1.0;
 const VIEWPORT_HEIGHT: f64 = 2.0;
 const VIEWPORT_WIDTH: f64 = VIEWPORT_HEIGHT * 2.0;
 
-pub fn run() {
+pub static SCENE: Lazy<Scene> = Lazy::new(|| {
     let mut scene = Scene::new();
 
     // scene
     scene.add(Box::new(Sphere::new(
         point3!(0, -100.5, -1),
         100,
-        Rc::new(Lambertian::new(color!(205, 205, 0))),
+        Arc::new(Lambertian::new(color!(205, 205, 0))),
     )));
     scene.add(Box::new(Sphere::new(
         point3!(0, 0, -1),
         0.5,
-        Rc::new(Lambertian::new(color!(180, 77, 77))),
+        Arc::new(Lambertian::new(color!(180, 77, 77))),
     )));
     scene.add(Box::new(Sphere::new(
         point3!(-1.0, 0, -1),
         0.5,
-        Rc::new(Lambertian::new(color!(205, 205, 205))),
-    )));
-    scene.add(Box::new(Sphere::new(
-        point3!(1.0, 0, -1),
-        0.5,
-        Rc::new(Lambertian::new(color!(205, 153, 51))),
+        Arc::new(Metal::new(color!(205, 205, 205), 0.3)),
     )));
 
+    scene
+});
+
+pub fn run() {
     // init camera
     let camera = Camera::new(
         (WIDTH, HEIGHT),
@@ -53,5 +53,5 @@ pub fn run() {
     let mut file = PPMFile::new("output.ppm", WIDTH, HEIGHT);
     let writer = file.writer();
 
-    camera.render(writer, &scene);
+    camera.render(writer);
 }
