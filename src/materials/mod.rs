@@ -7,8 +7,10 @@ pub trait Material {
     fn scatter(&self, hit: HitData, ray: Ray) -> (Ray, Color);
 }
 
+mod dielectric;
 mod lambertian;
 mod metal;
 
+pub use dielectric::Dielectric;
 pub use lambertian::Lambertian;
 pub use metal::Metal;

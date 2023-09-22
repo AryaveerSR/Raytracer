@@ -66,6 +66,10 @@ impl Vec3 {
         *self / self.length()
     }
 
+    pub const fn new_const(x: f64, y: f64, z: f64) -> Self {
+        Vec3(x, y, z)
+    }
+
     pub fn new<X: Into<f64>, Y: Into<f64>, Z: Into<f64>>(x: X, y: Y, z: Z) -> Self {
         Vec3(x.into(), y.into(), z.into())
     }

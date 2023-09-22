@@ -1,7 +1,9 @@
+//! Implementation of camera (rendering the scene).
+
 use crate::{
-    color, interval, point3,
+    interval,
     structs::{Color, Interval, Point3, Ray, Vec3},
-    vec3, SCENE,
+    HEIGHT, SCENE, WIDTH,
 };
 use rand::Rng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
@@ -11,58 +13,81 @@ use std::{
     sync::{mpsc, Arc},
 };
 
+//todo! all constants user defineable ?
+const VERTICAL_FOV: f64 = 90.0; // In Degrees
+
+const LOOK_FROM: Point3 = Point3::new_const(-2.0, 1.0, 1.0);
+const LOOK_TO: Point3 = Point3::new_const(0.0, 0.0, -1.0);
+const VUP: Vec3 = Vec3::new_const(0.0, 1.0, 0.0); // Camera relative "up" direction
+
+/// Struct representing a camera.
 pub struct Camera {
-    width: u16,
-    height: u16,
     first_pixel: Point3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
-    center: Point3,
 }
 
 impl Camera {
-    const SAMPLES: u16 = 10;
-    const MAX_BOUNCES: u8 = 10;
+    /// How many surrounding pixels are to be sampled ?
+    const SAMPLES: u16 = 20;
+    /// How many times should a ray bounce ?
+    const MAX_BOUNCES: u8 = 20;
 
+    /// The main render function.
     pub fn render(&self, writer: &mut dyn Write) {
+        // a channel to send and receive completed rows.
         let (sender, receiver) = mpsc::channel::<(u16, Arc<Vec<Color>>)>();
 
-        (0..(self.height))
-            .into_par_iter()
-            .for_each_with(sender, |s, i| {
-                let mut pixels = vec![];
+        println!("Starting Computing.");
+        // for every row..
+        (0..HEIGHT).into_par_iter().for_each_with(sender, |s, i| {
+            //? println!("Computing row {}", i);
 
-                for j in 0..(self.width) {
-                    let mut color = color!(0, 0, 0);
+            let mut pixels = vec![];
 
-                    for _ in 0..(Self::SAMPLES) {
-                        let ray = self.get_ray(i, j);
-                        color += Camera::ray_color(ray, Self::MAX_BOUNCES);
-                    }
+            // compute the pixels
+            for j in 0..WIDTH {
+                let mut color = Color::BLACK;
 
-                    let color = Self::average_samples(color);
-                    pixels.push(color);
+                for _ in 0..(Self::SAMPLES) {
+                    let ray = self.get_ray(i, j);
+                    color += Camera::ray_color(ray, Self::MAX_BOUNCES);
                 }
 
-                s.send((i, Arc::new(pixels))).unwrap();
-            });
+                let color = Self::average_samples(color);
+                pixels.push(color);
+            }
 
+            // and send them.
+            s.send((i, Arc::new(pixels))).unwrap();
+        });
+
+        // the current row we are waiting on.
         let mut current_pending_row: u16 = 0;
-        let mut row_hashes: HashMap<u16, Arc<Vec<Color>>> = HashMap::new(); //todo! is hashmap the best structure to use ?
+        // if the rows are out of order, they wait their turn in this hashmap.
+        let mut row_hashes: HashMap<u16, Arc<Vec<Color>>> = HashMap::new();
 
-        while current_pending_row < self.height {
-            let val = receiver.try_recv(); //todo! better variables
+        println!("Starting Writing");
+        while current_pending_row < HEIGHT {
+            //? println!("Waiting for row {}", current_pending_row);
 
-            if val.is_ok() {
-                let (i, row) = val.unwrap();
+            let received_row = receiver.try_recv();
 
+            if received_row.is_ok() {
+                let (i, row) = received_row.unwrap();
+
+                // if the row is the one we need, just write it and carry on
                 if i == current_pending_row {
                     Self::write_row(row, writer);
                     current_pending_row += 1;
                 } else {
+                    // or put it in the waiting list
                     row_hashes.insert(i, row);
                 }
             } else {
+                // check if the row we need is now on the hashmap
+                // the else is triggered when there are no more rows to receive,
+                // which is either when all are computed or one's taking a long time.
                 if row_hashes.contains_key(&current_pending_row) {
                     let row = row_hashes.remove(&current_pending_row).unwrap();
                     Self::write_row(row, writer);
@@ -72,6 +97,7 @@ impl Camera {
         }
     }
 
+    /// write that damn row
     fn write_row(row: Arc<Vec<Color>>, writer: &mut dyn Write) {
         for pixel in row.iter() {
             writeln!(writer, "{} {} {}", pixel.r(), pixel.g(), pixel.b()).unwrap();
@@ -83,10 +109,11 @@ impl Camera {
             self.first_pixel + (self.pixel_delta_u * j as f64) + (self.pixel_delta_v * i as f64);
         let pixel_sample = pixel_center + self.pixel_sample_square();
 
-        let ray_direction = pixel_sample - self.center;
-        Ray::new(self.center, ray_direction)
+        let ray_direction = pixel_sample - LOOK_FROM;
+        Ray::new(LOOK_FROM, ray_direction)
     }
 
+    // generate a random sample square
     fn pixel_sample_square(&self) -> Vec3 {
         let mut rng = rand::thread_rng();
 
@@ -96,6 +123,7 @@ impl Camera {
         (self.pixel_delta_u * px) + (self.pixel_delta_v * py)
     }
 
+    // divide the accumulated color by the no. of samples
     fn average_samples(color: Color) -> Color {
         let scale = 1.0 / Self::SAMPLES as f64;
 
@@ -108,12 +136,11 @@ impl Camera {
 
     fn ray_color(ray: Ray, bounces: u8) -> Color {
         if bounces <= 0 {
-            return color!(0, 0, 0);
+            return Color::BLACK;
         }
         match SCENE.does_hit(ray, interval!(0.1, f64::INFINITY)) {
             Some(hit) => {
                 let (mut ray, albedo) = hit.material.scatter(hit.clone(), ray);
-
                 if ray.direction().near_zero() {
                     ray = Ray::new(hit.point(), hit.normal());
                 }
@@ -125,6 +152,7 @@ impl Camera {
                     (ray_color.b() as f64 * (albedo.b() as f64) / 255.0) as i32,
                 );
             }
+            // a nice sky
             None => linear_interpolation(
                 (ray.direction().unit_vec().y() + 1.0) * 0.5,
                 Color::WHITE,
@@ -133,27 +161,33 @@ impl Camera {
         }
     }
 
-    pub fn new(screen: (u16, u16), viewport: (f64, f64), focal_length: f64) -> Self {
-        let camera_center = point3!(0, 0, 0);
+    pub fn new() -> Self {
+        let focal_length = (LOOK_FROM - LOOK_TO).length();
 
-        let viewport_u = vec3!(viewport.0, 0, 0);
-        let viewport_v = vec3!(0, -viewport.1, 0);
+        let theta = VERTICAL_FOV.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
+        let viewport_width = viewport_height * (WIDTH / HEIGHT) as f64;
 
-        let pixel_delta_u = viewport_u / screen.0;
-        let pixel_delta_v = viewport_v / screen.1;
+        let w = (LOOK_FROM - LOOK_TO).unit_vec();
+        let u = VUP.cross(w).unit_vec();
+        let v = w.cross(u);
+
+        let viewport_u = u * viewport_width;
+        let viewport_v = v * viewport_height;
+
+        let pixel_delta_u = viewport_u / WIDTH;
+        let pixel_delta_v = viewport_v / HEIGHT;
 
         let viewport_top_left =
-            camera_center - vec3!(0, 0, focal_length) - (viewport_u / 2.0) - (viewport_v / 2.0);
+            LOOK_FROM - (w * focal_length) - (viewport_u / 2.0) - (viewport_v / 2.0);
 
         let first_pixel = viewport_top_left + (pixel_delta_u + pixel_delta_v) * 0.5_f64;
 
         Camera {
-            width: screen.0,
-            height: screen.1,
             pixel_delta_u,
             pixel_delta_v,
             first_pixel,
-            center: camera_center,
         }
     }
 }

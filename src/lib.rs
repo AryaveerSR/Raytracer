@@ -6,23 +6,20 @@ pub mod structs;
 
 use camera::Camera;
 use file::{FileWriter, PPMFile};
-use materials::{Lambertian, Metal};
+use materials::{Dielectric, Lambertian, Metal};
 use objects::{Scene, Sphere};
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 use structs::Point3;
 
-const WIDTH: u16 = 800;
-const HEIGHT: u16 = 400;
+const WIDTH: u16 = 400;
+const HEIGHT: u16 = 200;
 
-const FOCAL_LENGTH: f64 = 1.0;
-const VIEWPORT_HEIGHT: f64 = 2.0;
-const VIEWPORT_WIDTH: f64 = VIEWPORT_HEIGHT * 2.0;
-
+//todo! load from file ??
+/// A static object containing the scene that is to be rendered.
 pub static SCENE: Lazy<Scene> = Lazy::new(|| {
     let mut scene = Scene::new();
 
-    // scene
     scene.add(Box::new(Sphere::new(
         point3!(0, -100.5, -1),
         100,
@@ -34,9 +31,14 @@ pub static SCENE: Lazy<Scene> = Lazy::new(|| {
         Arc::new(Lambertian::new(color!(180, 77, 77))),
     )));
     scene.add(Box::new(Sphere::new(
-        point3!(-1.0, 0, -1),
+        point3!(-1, 0, -1),
         0.5,
-        Arc::new(Metal::new(color!(205, 205, 205), 0.3)),
+        Arc::new(Metal::new(color!(204, 204, 204), 0.3)),
+    )));
+    scene.add(Box::new(Sphere::new(
+        point3!(1, 0, -1),
+        0.5,
+        Arc::new(Lambertian::new(color!(180, 77, 77))),
     )));
 
     scene
@@ -44,14 +46,13 @@ pub static SCENE: Lazy<Scene> = Lazy::new(|| {
 
 pub fn run() {
     // init camera
-    let camera = Camera::new(
-        (WIDTH, HEIGHT),
-        (VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
-        FOCAL_LENGTH,
-    );
+    let camera = Camera::new();
 
+    // init output file
     let mut file = PPMFile::new("output.ppm", WIDTH, HEIGHT);
+    // get the writer (to be used with `write!` macro)
     let writer = file.writer();
 
+    // render ahoy!
     camera.render(writer);
 }
