@@ -6,7 +6,7 @@ pub mod structs;
 
 use camera::Camera;
 use file::{FileWriter, PPMFile};
-use materials::{Dielectric, Lambertian, Metal};
+use materials::{Lambertian, Metal};
 use objects::{Scene, Sphere};
 use once_cell::sync::Lazy;
 use std::sync::Arc;

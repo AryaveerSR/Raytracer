@@ -3,7 +3,7 @@
 //todo! Sort this mess
 //todo! decide on a data type for r,g and b.
 //todo! camera needs f64 ( see tuple mess )
-use std::ops::{Add, AddAssign, Mul};
+use std::ops::{Add, AddAssign, Div, Mul};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Color {
@@ -110,6 +110,19 @@ impl Mul for Color {
             (self.r() as f64 * color.r() as f64) as i32,
             (self.g() as f64 * color.g() as f64) as i32,
             (self.b() as f64 * color.b() as f64) as i32,
+        )
+    }
+}
+
+impl<T: Into<f64>> Div<T> for Color {
+    type Output = Self;
+
+    fn div(self, scalar: T) -> Self::Output {
+        let scalar = scalar.into();
+        Color::new(
+            (self.r() as f64 / scalar) as i32,
+            (self.g() as f64 / scalar) as i32,
+            (self.b() as f64 / scalar) as i32,
         )
     }
 }

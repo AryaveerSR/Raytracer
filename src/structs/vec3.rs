@@ -10,7 +10,7 @@ pub struct Vec3(f64, f64, f64);
 pub type Point3 = Vec3;
 
 impl Vec3 {
-    const NEAR_ZERO_OFFSET: f64 = 1e-8;
+    const NEAR_ZERO_OFFSET: f64 = 1e-8; // 10^-8
 
     pub fn x(&self) -> f64 {
         self.0
