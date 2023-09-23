@@ -2,6 +2,8 @@
 
 use std::ops::{Add, AddAssign, Div, Mul};
 
+use rand::Rng;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Color {
     r: i32,
@@ -37,6 +39,16 @@ impl Color {
 
     pub fn as_string(&self) -> String {
         format!("{} {} {}", self.r(), self.g(), self.b())
+    }
+
+    pub fn random() -> Self {
+        let mut rng = rand::thread_rng();
+
+        Color {
+            r: rng.gen_range(0..256),
+            g: rng.gen_range(0..256),
+            b: rng.gen_range(0..256),
+        }
     }
 
     pub fn new<X: Into<i32>, Y: Into<i32>, Z: Into<i32>>(r: X, g: Y, b: Z) -> Self {

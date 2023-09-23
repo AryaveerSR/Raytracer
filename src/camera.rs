@@ -14,13 +14,13 @@ use std::{
 };
 
 //todo! all constants user defineable ?
-const VERTICAL_FOV: f64 = 90.0; // In Degrees
+const VERTICAL_FOV: f64 = 50.0; // In Degrees
 
 const LOOK_FROM: Point3 = Point3::new_const(0.0, 0.0, 1.0); // The camera's assumed center.
 const LOOK_TO: Point3 = Point3::new_const(0.0, 0.0, 0.0); // The point the camera is looking at.
 const VUP: Vec3 = Vec3::new_const(0.0, 1.0, 0.0); // What direction is up, in this case positive y-axis.
 
-const MAX_BOUNCES: u8 = 10; // Max. no of bounces a ray can have before it just turns black.
+const MAX_BOUNCES: u8 = 20; // Max. no of bounces a ray can have before it just turns black.
 const SAMPLES: u16 = 20; // Max. no of samples. More samples look better but are more compute-intensive.
 
 /// Struct representing a camera.
@@ -67,8 +67,7 @@ impl Camera {
             s.send((i, Arc::new(pixels))).unwrap();
         });
 
-        // The following code receives the completed rows from each thread.
-        //todo! this was designed to run in a thread parallel to the computing threads themselves,
+        // The following code receives the completed rows from each thread and writes to file.
 
         // The row we are waiting on
         let mut current_pending_row: u16 = 0;
@@ -77,7 +76,7 @@ impl Camera {
         // if its not their turn.
         let mut row_hashes: HashMap<u16, Arc<Vec<Color>>> = HashMap::new();
 
-        println!("Starting Writing");
+        println!("Starting writing");
 
         while current_pending_row < HEIGHT {
             //? println!("Waiting for row {}", current_pending_row);
