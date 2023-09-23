@@ -1,5 +1,7 @@
 //! A structure representing an interval.
 
+use std::ops::RangeInclusive;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Interval {
     pub min: f64,
@@ -46,6 +48,10 @@ impl Interval {
         } else {
             t
         }
+    }
+
+    pub fn to_range(&self) -> RangeInclusive<f64> {
+        self.min..=self.max
     }
 
     pub fn new<X: Into<f64>, Y: Into<f64>>(min: X, max: Y) -> Self {

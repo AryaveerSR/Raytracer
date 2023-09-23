@@ -1,9 +1,13 @@
-use super::Material;
+use super::{commons::random_unit_vector, Material};
 use crate::{
     objects::HitData,
-    structs::{Color, Interval, Ray, Vec3},
+    structs::{Color, Ray},
 };
 
+/// Structure representing a lambertian surface, which is a type of an ideal "matte" surface.
+///
+/// `albedo` is the effective color of the surface. Everytime a ray bounces off the material,
+/// its respective components are multiplied by a factor of `albedo / 255`.
 pub struct Lambertian {
     albedo: Color,
 }
@@ -12,26 +16,13 @@ impl Lambertian {
     pub fn new(albedo: Color) -> Self {
         Lambertian { albedo }
     }
-
-    fn random_unit_vector(normal: Vec3) -> Vec3 {
-        let vector = loop {
-            let p = Vec3::random(Interval::new(-1, 1));
-            if p.length_squared() < 1.0 {
-                break p.unit_vec();
-            }
-        };
-
-        if vector.dot(normal) > 0.0 {
-            vector
-        } else {
-            -vector
-        }
-    }
 }
 
 impl Material for Lambertian {
     fn scatter(&self, hit: HitData, _: Ray) -> (Ray, Color) {
-        let direction = hit.normal() + Self::random_unit_vector(hit.normal());
+        // A lambertian scattering simply involves adding a random unit vector to the normal.
+        let direction = hit.normal() + random_unit_vector(hit.normal());
+
         (Ray::new(hit.point(), direction), self.albedo)
     }
 }

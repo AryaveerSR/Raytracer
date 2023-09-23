@@ -1,8 +1,5 @@
 //! A structure representing a color.
 
-//todo! Sort this mess
-//todo! decide on a data type for r,g and b.
-//todo! camera needs f64 ( see tuple mess )
 use std::ops::{Add, AddAssign, Div, Mul};
 
 #[derive(Clone, Copy, Debug)]

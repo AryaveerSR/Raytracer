@@ -1,8 +1,10 @@
 use std::time::Instant;
 
 fn main() {
-    let t = Instant::now();
-    println!("Rendering... ");
+    let start_time = Instant::now();
+    println!("Starting raytracer... ");
+
     raytracing::run();
-    println!("Finished in {}s", t.elapsed().as_secs());
+
+    println!("Finished in {}s", start_time.elapsed().as_secs());
 }

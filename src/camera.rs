@@ -16,11 +16,11 @@ use std::{
 //todo! all constants user defineable ?
 const VERTICAL_FOV: f64 = 90.0; // In Degrees
 
-const LOOK_FROM: Point3 = Point3::new_const(-2.0, 1.0, 1.0); // The camera's assumed center.
-const LOOK_TO: Point3 = Point3::new_const(0.0, 0.0, -1.0); // The point the camera is looking at.
+const LOOK_FROM: Point3 = Point3::new_const(0.0, 0.0, 1.0); // The camera's assumed center.
+const LOOK_TO: Point3 = Point3::new_const(0.0, 0.0, 0.0); // The point the camera is looking at.
 const VUP: Vec3 = Vec3::new_const(0.0, 1.0, 0.0); // What direction is up, in this case positive y-axis.
 
-const MAX_BOUNCES: u8 = 20; // Max. no of bounces a ray can have before it just turns black.
+const MAX_BOUNCES: u8 = 10; // Max. no of bounces a ray can have before it just turns black.
 const SAMPLES: u16 = 20; // Max. no of samples. More samples look better but are more compute-intensive.
 
 /// Struct representing a camera.
@@ -154,8 +154,10 @@ impl Camera {
 
         // Check if the scene has any object that is in the path of this ray.
         //
-        // The interval starts at 0.1 because of floating-point inaccuracies, if a ray
+        // The interval starts at 0.1 to prevent shadow-acne (see below), where if a ray
         // just bounced off a surface, the same surface might appear to be in the path again.
+        //
+        // PS: https://stackoverflow.com/questions/36908835/what-causes-shadow-acne
         match SCENE.does_hit(ray, interval!(0.1, f64::INFINITY)) {
             // If the ray does hit, get the hit data.
             Some(hit) => {

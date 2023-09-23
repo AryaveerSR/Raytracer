@@ -1,7 +1,6 @@
 use crate::{
     materials::Material,
     structs::{Interval, Point3, Ray, Vec3},
-    vec3,
 };
 use std::sync::Arc;
 
@@ -15,12 +14,18 @@ pub struct HitData {
 }
 
 impl HitData {
-    pub fn new(point: Point3, time: f64, material: Arc<dyn Material + Sync + Send>) -> Self {
+    pub fn new(
+        point: Point3,
+        time: f64,
+        material: Arc<dyn Material + Sync + Send>,
+        is_front_face: bool,
+        normal: Vec3,
+    ) -> Self {
         HitData {
             point,
             time,
-            normal: vec3!(0, 0, 0),
-            is_front_face: true,
+            normal,
+            is_front_face,
             material,
         }
     }
@@ -35,17 +40,6 @@ impl HitData {
 
     pub fn normal(&self) -> Vec3 {
         self.normal
-    }
-
-    fn set_face_and_normal(&mut self, ray: Ray, outward_normal: Vec3) {
-        let is_front_face = ray.direction().dot(outward_normal) < 0.0;
-        self.is_front_face = is_front_face;
-
-        self.normal = if is_front_face {
-            outward_normal
-        } else {
-            -outward_normal
-        }
     }
 }
 

@@ -1,11 +1,13 @@
-use std::sync::Arc;
+//! A sphere geometry for an object.
 
 use super::{HitData, Object};
 use crate::{
     materials::Material,
     structs::{Interval, Point3, Ray},
 };
+use std::sync::Arc;
 
+/// The main structure defining a sphere, with a center, radius, and the material.
 pub struct Sphere {
     center: Point3,
     radius: f64,
@@ -28,9 +30,10 @@ impl Sphere {
 
 impl Object for Sphere {
     fn material(&self) -> Arc<dyn Material + Sync + Send> {
-        self.material.clone()
+        Arc::clone(&self.material)
     }
 
+    /// Calculating whether a ray hits the sphere.
     fn does_hit(&self, ray: Ray, interval: Interval) -> Option<HitData> {
         let distance = ray.origin() - self.center;
 
@@ -39,25 +42,37 @@ impl Object for Sphere {
         let c = distance.length_squared() - self.radius.powi(2);
         let discriminant = b.powi(2) - a * c;
 
-        if discriminant >= 0.0 {
-            let underroot_d = discriminant.sqrt();
-            let mut root = (-b - underroot_d) / a;
-
-            if interval.excludes(root) {
-                root = (-b + underroot_d) / a;
-
-                if interval.excludes(root) {
-                    return None;
-                }
-            }
-
-            let normal = (ray.at(root) - self.center) / self.radius;
-            let mut hit_data = HitData::new(ray.at(root), root, self.material.clone());
-
-            hit_data.set_face_and_normal(ray, normal);
-            return Some(hit_data);
+        if discriminant < 0.0 {
+            return None;
         }
 
-        None
+        let underroot_d = discriminant.sqrt();
+        let mut root = (-b - underroot_d) / a;
+
+        if interval.excludes(root) {
+            root = (-b + underroot_d) / a;
+
+            if interval.excludes(root) {
+                return None;
+            }
+        }
+
+        let outward_normal = (ray.at(root) - self.center) / self.radius;
+
+        let is_front_face = ray.direction().dot(outward_normal) < 0.0;
+        let normal = match is_front_face {
+            true => outward_normal,
+            false => -outward_normal,
+        };
+
+        let hit_data = HitData::new(
+            ray.at(root),
+            root,
+            self.material.clone(),
+            is_front_face,
+            normal,
+        );
+
+        Some(hit_data)
     }
 }

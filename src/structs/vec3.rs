@@ -2,16 +2,18 @@
 
 use super::Interval;
 use rand::Rng;
-use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Debug, Copy)]
 pub struct Vec3(f64, f64, f64);
 
+// A point and a vector are basically the same, and would often be used interchangeably,
+// but its still good to have different types for code clarity.
 pub type Point3 = Vec3;
 
-impl Vec3 {
-    const NEAR_ZERO_OFFSET: f64 = 1e-8; // 10^-8
+const NEAR_ZERO_OFFSET: f64 = 1e-8; // 10^-8
 
+impl Vec3 {
     pub fn x(&self) -> f64 {
         self.0
     }
@@ -44,21 +46,26 @@ impl Vec3 {
         )
     }
 
+    /// Check if the vector is almost zero.
+    ///
+    /// This is used when calculating the scattered rays.
     pub fn near_zero(&self) -> bool {
-        (self.0.abs() < Self::NEAR_ZERO_OFFSET)
-            & (self.1.abs() < Self::NEAR_ZERO_OFFSET)
-            & (self.2.abs() < Self::NEAR_ZERO_OFFSET)
+        (self.0.abs() < NEAR_ZERO_OFFSET)
+            & (self.1.abs() < NEAR_ZERO_OFFSET)
+            & (self.2.abs() < NEAR_ZERO_OFFSET)
     }
 
     /// Both min and max are **inclusive**
     pub fn random(interval: Interval) -> Vec3 {
         let mut rng = rand::thread_rng();
-        let min = interval.min;
-        let max = interval.max;
+
+        let range = interval.to_range();
+
+        // Cloning a range is zero-cost.
         Vec3(
-            rng.gen_range(min..=max),
-            rng.gen_range(min..=max),
-            rng.gen_range(min..=max),
+            rng.gen_range(range.clone()),
+            rng.gen_range(range.clone()),
+            rng.gen_range(range),
         )
     }
 
@@ -201,6 +208,9 @@ impl Neg for Vec3 {
     }
 }
 
+//? The index way of accessing x,y and z values results
+//? in un-idiomatic code. Use `.x()`, `.y()` or `.z()` instead.
+/*
 impl Index<u8> for Vec3 {
     type Output = f64;
 
@@ -213,6 +223,7 @@ impl Index<u8> for Vec3 {
         }
     }
 }
+*/
 
 #[macro_export]
 macro_rules! vec3 {

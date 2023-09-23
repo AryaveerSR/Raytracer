@@ -6,14 +6,14 @@ pub mod structs;
 
 use camera::Camera;
 use file::{FileWriter, PPMFile};
-use materials::{Lambertian, Metal};
+use materials::{Dielectric, Lambertian, Metal};
 use objects::{Scene, Sphere};
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 use structs::Point3;
 
-const WIDTH: u16 = 400;
-const HEIGHT: u16 = 200;
+const WIDTH: u16 = 800;
+const HEIGHT: u16 = 400;
 
 //todo! load from file ??
 /// A static object containing the scene that is to be rendered.
@@ -33,12 +33,12 @@ pub static SCENE: Lazy<Scene> = Lazy::new(|| {
     scene.add(Box::new(Sphere::new(
         point3!(-1, 0, -1),
         0.5,
-        Arc::new(Metal::new(color!(204, 204, 204), 0.3)),
+        Arc::new(Dielectric::new(1.5)),
     )));
     scene.add(Box::new(Sphere::new(
         point3!(1, 0, -1),
         0.5,
-        Arc::new(Lambertian::new(color!(180, 77, 77))),
+        Arc::new(Metal::new(color!(204, 204, 204), 0.1)),
     )));
 
     scene
