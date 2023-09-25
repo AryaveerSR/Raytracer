@@ -43,11 +43,12 @@ impl HitData {
     }
 }
 
-pub trait Object {
+pub trait Object: std::fmt::Debug {
     fn does_hit(&self, ray: Ray, interval: Interval) -> Option<HitData>;
     fn material(&self) -> Arc<dyn Material + Sync + Send>;
 }
 
+#[derive(Debug)]
 pub struct Scene {
     objects: Vec<Box<dyn Object + Sync + Send>>,
 }

@@ -12,6 +12,7 @@ use crate::{
 /// `fuzz` is the factor for the randomness induced in the reflected ray's direction.
 /// It should be between 0 and 1. Values above 1 just result in noise, and negatives are
 /// the same as the randomness covers negative and positive deviations equally.
+#[derive(Debug)]
 pub struct Metal {
     albedo: Color,
     fuzz: f64,

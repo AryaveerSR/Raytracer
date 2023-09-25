@@ -166,7 +166,11 @@ impl Camera {
         // just bounced off a surface, the same surface might appear to be in the path again.
         //
         // PS: https://stackoverflow.com/questions/36908835/what-causes-shadow-acne
-        match SCENE.does_hit(ray, interval!(0.1, f64::INFINITY)) {
+        match SCENE
+            .get()
+            .expect("OnceCell initialization failed")
+            .does_hit(ray, interval!(0.1, f64::INFINITY))
+        {
             // If the ray does hit, get the hit data.
             Some(hit) => {
                 // Call the scatter function on the material of the surface just hit.

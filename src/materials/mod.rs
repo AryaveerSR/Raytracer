@@ -3,7 +3,7 @@ use crate::{
     structs::{Color, Ray},
 };
 
-pub trait Material {
+pub trait Material: std::fmt::Debug {
     fn scatter(&self, hit: HitData, ray: Ray) -> (Ray, Color);
 }
 

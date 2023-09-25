@@ -8,6 +8,7 @@ use crate::{
 ///
 /// `albedo` is the effective color of the surface. Everytime a ray bounces off the material,
 /// its respective components are multiplied by a factor of `albedo / 255`.
+#[derive(Debug)]
 pub struct Lambertian {
     albedo: Color,
 }

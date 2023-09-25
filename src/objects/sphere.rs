@@ -8,6 +8,7 @@ use crate::{
 use std::sync::Arc;
 
 /// The main structure defining a sphere, with a center, radius, and the material.
+#[derive(Debug)]
 pub struct Sphere {
     center: Point3,
     radius: f64,

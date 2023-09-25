@@ -6,10 +6,8 @@ pub mod structs;
 
 use camera::Camera;
 use file::{FileWriter, PPMFile};
-use materials::{Dielectric, Lambertian, Metal};
-use objects::{Scene, Sphere};
-use once_cell::sync::{Lazy, OnceCell};
-use std::sync::Arc;
+use objects::Scene;
+use once_cell::sync::OnceCell;
 use structs::{Point3, Vec3};
 
 pub struct Options {
@@ -34,6 +32,7 @@ pub enum FOV {
 
 static WIDTH: OnceCell<u16> = OnceCell::new();
 static HEIGHT: OnceCell<u16> = OnceCell::new();
+static SCENE: OnceCell<Scene> = OnceCell::new();
 
 static FIELD_OF_VIEW: OnceCell<FOV> = OnceCell::new();
 static MAX_BOUNCES: OnceCell<u8> = OnceCell::new();
@@ -42,36 +41,6 @@ static SAMPLES: OnceCell<u16> = OnceCell::new();
 static LOOK_FROM: OnceCell<Point3> = OnceCell::new();
 static LOOK_TO: OnceCell<Point3> = OnceCell::new();
 static VUP: OnceCell<Vec3> = OnceCell::new();
-
-//todo! load from file ??
-/// A static object containing the scene that is to be rendered.
-
-pub static SCENE: Lazy<Scene> = Lazy::new(|| {
-    let mut scene = Scene::new();
-
-    scene.add(Box::new(Sphere::new(
-        point3!(0, -100.5, -1),
-        100,
-        Arc::new(Lambertian::new(color!(205, 205, 0))),
-    )));
-    scene.add(Box::new(Sphere::new(
-        point3!(0, 0, -1),
-        0.5,
-        Arc::new(Lambertian::new(color!(180, 77, 77))),
-    )));
-    scene.add(Box::new(Sphere::new(
-        point3!(-1, 0, -1),
-        0.5,
-        Arc::new(Dielectric::new(1.5)),
-    )));
-    scene.add(Box::new(Sphere::new(
-        point3!(1, 0, -1),
-        0.5,
-        Arc::new(Metal::new(color!(204, 204, 204), 0.1)),
-    )));
-
-    scene
-});
 
 //? A really good but compute-heavy scene.
 /* pub static SCENE: Lazy<Scene> = Lazy::new(|| {
@@ -129,7 +98,8 @@ pub static SCENE: Lazy<Scene> = Lazy::new(|| {
 }); */
 
 pub fn run(opts: Options) {
-    //todo! comments
+    // Initialize the OnceCell statics.
+    // These shouldn't fail (hopefully).
     WIDTH.set(opts.width).unwrap();
     HEIGHT.set(opts.height).unwrap();
     FIELD_OF_VIEW.set(opts.fov).unwrap();
@@ -138,15 +108,16 @@ pub fn run(opts: Options) {
     LOOK_FROM.set(opts.look_from).unwrap();
     LOOK_TO.set(opts.look_to).unwrap();
     VUP.set(opts.vup).unwrap();
+    SCENE.set(opts.scene).unwrap();
 
-    // init camera
+    // Init camera
     let camera = Camera::new();
 
-    // init output file
+    // Init output file
     let mut file = PPMFile::new("output.ppm");
-    // get the writer (to be used with `write!` macro)
+    // Get the writer (to be used with `write!` macro)
     let writer = file.writer();
 
-    // render ahoy!
+    // Render ahoy!
     camera.render(writer);
 }

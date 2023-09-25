@@ -9,6 +9,7 @@ use rand::Rng;
 ///
 /// Dielectric materials are ones that allow light to pass through them (eg. glass, water), suffering some refraction
 /// Index of refraction defines the magnitude of refraction of light.
+#[derive(Debug)]
 pub struct Dielectric {
     index_of_refraction: f64,
 }
