@@ -139,6 +139,6 @@ impl<T: Into<f64>> Div<T> for Color {
 #[macro_export]
 macro_rules! color {
     ($r:expr, $g:expr, $b:expr) => {
-        crate::structs::Color::new($r, $g, $b)
+        $crate::structs::Color::new($r, $g, $b)
     };
 }

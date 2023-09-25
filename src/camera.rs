@@ -3,7 +3,7 @@
 use crate::{
     interval,
     structs::{Color, Interval, Point3, Ray, Vec3},
-    HEIGHT, SCENE, WIDTH,
+    FIELD_OF_VIEW, FOV, HEIGHT, LOOK_FROM, LOOK_TO, MAX_BOUNCES, SAMPLES, SCENE, VUP, WIDTH,
 };
 use rand::Rng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
@@ -13,15 +13,15 @@ use std::{
     sync::{mpsc, Arc},
 };
 
-//todo! all constants user defineable ?
-const VERTICAL_FOV: f64 = 50.0; // In Degrees
+//todo! remove
+/* const FOV: FOV = FOV::Vertical(50.0); // In Degrees
 
 const LOOK_FROM: Point3 = Point3::new_const(0.0, 0.0, 1.0); // The camera's assumed center.
 const LOOK_TO: Point3 = Point3::new_const(0.0, 0.0, 0.0); // The point the camera is looking at.
 const VUP: Vec3 = Vec3::new_const(0.0, 1.0, 0.0); // What direction is up, in this case positive y-axis.
 
 const MAX_BOUNCES: u8 = 20; // Max. no of bounces a ray can have before it just turns black.
-const SAMPLES: u16 = 20; // Max. no of samples. More samples look better but are more compute-intensive.
+const SAMPLES: u16 = 20; // Max. no of samples. More samples look better but are more compute-intensive. */
 
 /// Struct representing a camera.
 /// See constructor for what the fields are.
@@ -41,31 +41,38 @@ impl Camera {
         println!("Starting computing.");
 
         // Loop through every row of the image.
-        (0..HEIGHT).into_par_iter().for_each_with(sender, |s, i| {
-            //? println!("Computing row {}", i);
+        (0..*HEIGHT.get().expect("OnceCell not initialized."))
+            .into_par_iter()
+            .for_each_with(sender, |s, i| {
+                //? println!("Computing row {}", i);
 
-            // The entire row stored as a vector of color.
-            let mut pixels = vec![];
+                // The entire row stored as a vector of color.
+                let mut pixels = vec![];
 
-            // For every pixel..
-            for j in 0..WIDTH {
-                let mut color = Color::BLACK;
+                // For every pixel..
+                for j in 0..*WIDTH.get().expect("OnceCell not initialized.") {
+                    let mut color = Color::BLACK;
 
-                // ..go through every sample ray
-                for _ in 0..(SAMPLES) {
-                    // get the color
-                    let ray = self.get_ray(i, j);
-                    // add it to the `color` variable
-                    color += Camera::ray_color(ray, MAX_BOUNCES);
+                    let samples = *SAMPLES.get().expect("OnceCell not initialized.");
+
+                    // ..go through every sample ray
+                    for _ in 0..(samples) {
+                        // get the color
+                        let ray = self.get_ray(i, j);
+                        // add it to the `color` variable
+                        color += Camera::ray_color(
+                            ray,
+                            *MAX_BOUNCES.get().expect("OnceCell not initialized."),
+                        );
+                    }
+
+                    // and just average it over the number of samples.
+                    pixels.push(color / samples);
                 }
 
-                // and just average it over the number of samples.
-                pixels.push(color / SAMPLES);
-            }
-
-            // and send them.
-            s.send((i, Arc::new(pixels))).unwrap();
-        });
+                // and send them.
+                s.send((i, Arc::new(pixels))).unwrap();
+            });
 
         // The following code receives the completed rows from each thread and writes to file.
 
@@ -78,7 +85,7 @@ impl Camera {
 
         println!("Starting writing");
 
-        while current_pending_row < HEIGHT {
+        while current_pending_row < *HEIGHT.get().expect("OnceCell not initialized.") {
             //? println!("Waiting for row {}", current_pending_row);
 
             // Try receiving a row.
@@ -129,8 +136,10 @@ impl Camera {
 
         let pixel_sample = pixel_center + self.pixel_sample_square();
 
-        let ray_direction = pixel_sample - LOOK_FROM;
-        Ray::new(LOOK_FROM, ray_direction)
+        let look_from = *LOOK_FROM.get().expect("OnceCell not initialized.");
+
+        let ray_direction = pixel_sample - look_from;
+        Ray::new(look_from, ray_direction)
     }
 
     /// Generate a random offset for a pixel to sample randomly.
@@ -189,19 +198,33 @@ impl Camera {
 
     /// Constructor for a camera.
     pub fn new() -> Self {
+        let width = WIDTH.get().expect("OnceCell not initialized."); //todo! comments ?
+        let height = HEIGHT.get().expect("OnceCell not initialized.");
+        let look_from = *LOOK_FROM.get().expect("OnceCell not initialized.");
+        let look_to = *LOOK_TO.get().expect("OnceCell not initialized.");
+        let vup = *VUP.get().expect("OnceCell not initialized.");
+
         // Calculate focal length.
         // This is possible as `LOOK_TO` is a point and not a direction (which it normally should be),
         // so we can use it to encode focal length.
         //
         // The alternative approach would be to define `LOOK_TO` as a vector to get the direction
         // relative to `LOOK_FROM`, and then have a constant for `FOCAL_LENGTH`.
-        let focal_length = (LOOK_FROM - LOOK_TO).length();
+        let focal_length = (look_from - look_to).length();
+
+        let vertical_fov = {
+            //todo! comments
+            match *FIELD_OF_VIEW.get().expect("OnceCell not initialized.") {
+                FOV::Vertical(fov) => fov,
+                FOV::Horizontal(fov) => fov * (*width as f64) / (*height as f64),
+            }
+        };
 
         // Calculate the viewport dimensions using focal length and the field of view.
-        let theta = VERTICAL_FOV.to_radians();
+        let theta = vertical_fov.to_radians();
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h * focal_length;
-        let viewport_width = viewport_height * (WIDTH / HEIGHT) as f64;
+        let viewport_width = viewport_height * (width / height) as f64;
 
         // The basis unit vectors to describe the camera's orientation.
         //
@@ -213,8 +236,8 @@ impl Camera {
         //
         // `w` is the vector pointing away from the direction the camera is looking.
         // (positive z-axis in above analogy)
-        let w = (LOOK_FROM - LOOK_TO).unit_vec();
-        let u = VUP.cross(w).unit_vec();
+        let w = (look_from - look_to).unit_vec();
+        let u = vup.cross(w).unit_vec();
         let v = w.cross(u);
 
         // Vectors with camera's up/right as direction and viewport height/width as magnitude.
@@ -222,12 +245,12 @@ impl Camera {
         let viewport_v = v * viewport_height;
 
         // Distance between each pixel vertically and horizontally, also in vector form.
-        let pixel_delta_u = viewport_u / WIDTH;
-        let pixel_delta_v = viewport_v / HEIGHT;
+        let pixel_delta_u = viewport_u / *width;
+        let pixel_delta_v = viewport_v / *height;
 
         // The starting postion for the viewport.
         let viewport_top_left =
-            LOOK_FROM - (w * focal_length) - (viewport_u / 2.0) - (viewport_v / 2.0);
+            look_from - (w * focal_length) - (viewport_u / 2.0) - (viewport_v / 2.0);
 
         // The position of the first pixel's center (considering them as points on a grid instead of little squares)
         let first_pixel = viewport_top_left + (pixel_delta_u + pixel_delta_v) * 0.5_f64;

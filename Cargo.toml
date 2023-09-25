@@ -8,3 +8,10 @@ author = "AryaveerSR <me.aryaveer@gmail.com"
 rand = "0.8.4"
 rayon = "1.7.0"
 once_cell = "1.18.0"
+
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
+
+[[bench]]
+name = "render"
+harness = false

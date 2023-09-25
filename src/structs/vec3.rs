@@ -228,13 +228,13 @@ impl Index<u8> for Vec3 {
 #[macro_export]
 macro_rules! vec3 {
     ($x:expr, $y:expr, $z:expr) => {
-        Vec3::new($x, $y, $z)
+        $crate::structs::Vec3::new($x, $y, $z)
     };
 }
 
 #[macro_export]
 macro_rules! point3 {
     ($x:expr, $y:expr, $z:expr) => {
-        Point3::new($x, $y, $z)
+        $crate::structs::Point3::new($x, $y, $z)
     };
 }
