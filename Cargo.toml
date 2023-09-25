@@ -2,7 +2,7 @@
 name = "raytracing"
 version = "0.1.0"
 edition = "2021"
-author = "AryaveerSR <me.aryaveer@gmail.com"
+authors = ["AryaveerSR <me.aryaveer@gmail.com"]
 
 [dependencies]
 rand = "0.8.4"

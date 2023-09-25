@@ -73,13 +73,26 @@ impl Vec3 {
         *self / self.length()
     }
 
-    pub const fn new_const(x: f64, y: f64, z: f64) -> Self {
-        Vec3(x, y, z)
-    }
-
     pub fn new<X: Into<f64>, Y: Into<f64>, Z: Into<f64>>(x: X, y: Y, z: Z) -> Self {
         Vec3(x.into(), y.into(), z.into())
     }
+}
+
+// Macros:
+// Usage: `vec3!(0,0,0)`.
+
+#[macro_export]
+macro_rules! vec3 {
+    ($x:expr, $y:expr, $z:expr) => {
+        $crate::structs::Vec3::new($x, $y, $z)
+    };
+}
+
+#[macro_export]
+macro_rules! point3 {
+    ($x:expr, $y:expr, $z:expr) => {
+        $crate::structs::Point3::new($x, $y, $z)
+    };
 }
 
 impl Add for Vec3 {
@@ -224,17 +237,3 @@ impl Index<u8> for Vec3 {
     }
 }
 */
-
-#[macro_export]
-macro_rules! vec3 {
-    ($x:expr, $y:expr, $z:expr) => {
-        $crate::structs::Vec3::new($x, $y, $z)
-    };
-}
-
-#[macro_export]
-macro_rules! point3 {
-    ($x:expr, $y:expr, $z:expr) => {
-        $crate::structs::Point3::new($x, $y, $z)
-    };
-}

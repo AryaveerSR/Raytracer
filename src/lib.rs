@@ -10,6 +10,7 @@ use objects::Scene;
 use once_cell::sync::OnceCell;
 use structs::{Point3, Vec3};
 
+/// A struct for the caller to pass all user-defined arguments.
 pub struct Options {
     pub scene: Scene,
     pub width: u16,
@@ -22,27 +23,44 @@ pub struct Options {
     pub samples: u16,
 }
 
+/// An enum for passing field-of-view in degrees in any axis we want.
+/// The other axis would be calculated based on the aspect ratio, which in turn
+/// is calculated from `WIDTH` and `HEIGHT`.
 #[derive(Debug)]
 pub enum FOV {
     Vertical(f64),
     Horizontal(f64),
 }
 
-//todo! comments
+// These constants are loaded in `run()` and used throughout the program.
+// OnceCell allows us to let the caller to `run()` pass the variables,
+// but still treat them as constants (makes multithreading simpler),
+// and allows us to do benchmarks.
 
+// Width and height of the rendered image.
+// The dimensions of the viewport are calculated using field-of-view data.
 static WIDTH: OnceCell<u16> = OnceCell::new();
 static HEIGHT: OnceCell<u16> = OnceCell::new();
+
+/// The scene itself.
 static SCENE: OnceCell<Scene> = OnceCell::new();
 
+/// Vertical or horizontal field of view in degrees.
 static FIELD_OF_VIEW: OnceCell<FOV> = OnceCell::new();
+/// Max. no of bounces a ray can have before it just turns black.
 static MAX_BOUNCES: OnceCell<u8> = OnceCell::new();
+/// Max. no of samples. More samples give a more "smooth" look but are more compute-intensive.
 static SAMPLES: OnceCell<u16> = OnceCell::new();
 
+/// The camera's assumed center.
 static LOOK_FROM: OnceCell<Point3> = OnceCell::new();
+/// The point the camera is looking at.
 static LOOK_TO: OnceCell<Point3> = OnceCell::new();
+/// What direction is up, usually case positive y-axis.
 static VUP: OnceCell<Vec3> = OnceCell::new();
 
 //? A really good but compute-heavy scene.
+//todo! examples/ with this scene
 /* pub static SCENE: Lazy<Scene> = Lazy::new(|| {
     let mut scene = Scene::new();
 

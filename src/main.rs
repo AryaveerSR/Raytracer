@@ -2,9 +2,7 @@ use raytracing::{
     self, color,
     materials::{Dielectric, Lambertian, Metal},
     objects::{Scene, Sphere},
-    point3,
-    structs::{Point3, Vec3},
-    Options, FOV,
+    point3, vec3, Options, FOV,
 };
 use std::{sync::Arc, time::Instant};
 
@@ -14,6 +12,7 @@ fn main() {
     let scene = {
         let mut scene = Scene::new();
 
+        //todo! macros to make this easier ??
         scene.add(Box::new(Sphere::new(
             point3!(0, -100.5, -1),
             100,
@@ -43,9 +42,9 @@ fn main() {
         width: 800,
         height: 400,
         fov: FOV::Vertical(50.0),
-        look_from: Point3::new_const(0.0, 0.0, 1.0),
-        look_to: Point3::new_const(0.0, 0.0, 0.0),
-        vup: Vec3::new_const(0.0, 1.0, 0.0),
+        look_from: point3!(0.0, 0.0, 1.0),
+        look_to: point3!(0.0, 0.0, 0.0),
+        vup: vec3!(0.0, 1.0, 0.0),
         max_bounces: 20,
         samples: 20,
     };

@@ -13,16 +13,6 @@ use std::{
     sync::{mpsc, Arc},
 };
 
-//todo! remove
-/* const FOV: FOV = FOV::Vertical(50.0); // In Degrees
-
-const LOOK_FROM: Point3 = Point3::new_const(0.0, 0.0, 1.0); // The camera's assumed center.
-const LOOK_TO: Point3 = Point3::new_const(0.0, 0.0, 0.0); // The point the camera is looking at.
-const VUP: Vec3 = Vec3::new_const(0.0, 1.0, 0.0); // What direction is up, in this case positive y-axis.
-
-const MAX_BOUNCES: u8 = 20; // Max. no of bounces a ray can have before it just turns black.
-const SAMPLES: u16 = 20; // Max. no of samples. More samples look better but are more compute-intensive. */
-
 /// Struct representing a camera.
 /// See constructor for what the fields are.
 pub struct Camera {
@@ -35,10 +25,11 @@ impl Camera {
     /// The main render function that does frankly everything.
     pub fn render(&self, writer: &mut dyn Write) {
         // A receiver and (about to be cloned a lot) sender to send back the results of each compute.
-        //todo! WGPU: using compute for this.
         let (sender, receiver) = mpsc::channel::<(u16, Arc<Vec<Color>>)>();
 
         println!("Starting computing.");
+
+        //todo! WGPU: using compute for this.
 
         // Loop through every row of the image.
         (0..*HEIGHT.get().expect("OnceCell not initialized."))
@@ -131,12 +122,12 @@ impl Camera {
     /// Each time its called (which should be equal to the no. of samples),
     /// it will randomize by a bit (see `pixel_sample_square()`)
     fn get_ray(&self, i: u16, j: u16) -> Ray {
+        let look_from = *LOOK_FROM.get().expect("OnceCell not initialized.");
+
         let pixel_center =
             self.first_pixel + (self.pixel_delta_u * j as f64) + (self.pixel_delta_v * i as f64);
 
         let pixel_sample = pixel_center + self.pixel_sample_square();
-
-        let look_from = *LOOK_FROM.get().expect("OnceCell not initialized.");
 
         let ray_direction = pixel_sample - look_from;
         Ray::new(look_from, ray_direction)
@@ -202,7 +193,8 @@ impl Camera {
 
     /// Constructor for a camera.
     pub fn new() -> Self {
-        let width = WIDTH.get().expect("OnceCell not initialized."); //todo! comments ?
+        // Static variables used repeatedly in this function.
+        let width = WIDTH.get().expect("OnceCell not initialized.");
         let height = HEIGHT.get().expect("OnceCell not initialized.");
         let look_from = *LOOK_FROM.get().expect("OnceCell not initialized.");
         let look_to = *LOOK_TO.get().expect("OnceCell not initialized.");
@@ -216,8 +208,11 @@ impl Camera {
         // relative to `LOOK_FROM`, and then have a constant for `FOCAL_LENGTH`.
         let focal_length = (look_from - look_to).length();
 
+        // Calculate the vertical field-of-view from the passed `FIELD_OF_VIEW` enum.
+        // The enum can contain the vertical fov, which is just what we want,
+        // or it can have the horizontal fov, which can be multiplied by the aspect ratio to get the
+        // vertical fov.
         let vertical_fov = {
-            //todo! comments
             match *FIELD_OF_VIEW.get().expect("OnceCell not initialized.") {
                 FOV::Vertical(fov) => fov,
                 FOV::Horizontal(fov) => fov * (*width as f64) / (*height as f64),
