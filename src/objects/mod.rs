@@ -4,11 +4,14 @@ use crate::{
 };
 use std::sync::Arc;
 
+/// A struct describing a "hit", when a ray hits an object in the scene.
 #[derive(Clone)]
 pub struct HitData {
     point: Point3,
     normal: Vec3,
     time: f64,
+    /// Is this the side facing the camera ?
+    /// This is needed for things like refraction in dielectric materials.
     is_front_face: bool,
     pub material: Arc<dyn Material + Sync + Send>,
 }
@@ -43,11 +46,14 @@ impl HitData {
     }
 }
 
+/// A trait defining an object, having a material and a method to check if a
+/// certain ray hits it or not.
 pub trait Object: std::fmt::Debug {
     fn does_hit(&self, ray: Ray, interval: Interval) -> Option<HitData>;
     fn material(&self) -> Arc<dyn Material + Sync + Send>;
 }
 
+/// A struct defining the scene.
 #[derive(Debug)]
 pub struct Scene {
     objects: Vec<Box<dyn Object + Sync + Send>>,
@@ -62,9 +68,10 @@ impl Scene {
         self.objects.push(obj);
     }
 
+    /// Check if a ray hits any object in the scene.
     pub fn does_hit(&self, ray: Ray, interval: Interval) -> Option<HitData> {
         let mut hit_data: Option<HitData> = None;
-        let mut closest = interval.max + 1.0;
+        let mut closest = f64::INFINITY; // The first collision is always the closest.
 
         for obj in &self.objects {
             match obj.does_hit(ray, interval) {
