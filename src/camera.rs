@@ -27,6 +27,7 @@ impl Camera {
         // A receiver and (about to be cloned a lot) sender to send back the results of each compute.
         let (sender, receiver) = mpsc::channel::<(u16, Arc<Vec<Color>>)>();
 
+        #[cfg(debug_assertions)]
         println!("Starting computing.");
 
         //todo! WGPU: using compute for this.
@@ -35,6 +36,7 @@ impl Camera {
         (0..*HEIGHT.get().expect("OnceCell not initialized."))
             .into_par_iter()
             .for_each_with(sender, |s, i| {
+                //? #[cfg(debug_assertions)]
                 //? println!("Computing row {}", i);
 
                 // The entire row stored as a vector of color.
@@ -74,9 +76,11 @@ impl Camera {
         // if its not their turn.
         let mut row_hashes: HashMap<u16, Arc<Vec<Color>>> = HashMap::new();
 
+        #[cfg(debug_assertions)]
         println!("Starting writing");
 
         while current_pending_row < *HEIGHT.get().expect("OnceCell not initialized.") {
+            //? #[cfg(debug_assertions)]
             //? println!("Waiting for row {}", current_pending_row);
 
             // Try receiving a row.

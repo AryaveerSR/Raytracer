@@ -1,5 +1,4 @@
 use super::FileWriter;
-use crate::{HEIGHT, WIDTH};
 use std::{fs::File, io::Write};
 
 pub struct PPMFile {
@@ -11,20 +10,14 @@ impl FileWriter for PPMFile {
         &mut self.file
     }
 
-    fn new(file: &str) -> Self {
+    fn new(file: &str, width: u16, height: u16) -> Self {
         let mut ppm = PPMFile {
             file: File::create(file).unwrap(),
         };
 
         let writer = ppm.writer();
         writeln!(writer, "P3").unwrap();
-        writeln!(
-            writer,
-            "{} {}",
-            WIDTH.get().expect("OnceCell not initialized."),
-            HEIGHT.get().expect("OnceCell not initialized."),
-        )
-        .unwrap();
+        writeln!(writer, "{} {}", width, height).unwrap();
         writeln!(writer, "255").unwrap();
 
         ppm

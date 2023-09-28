@@ -5,12 +5,13 @@ pub mod objects;
 pub mod structs;
 
 use camera::Camera;
-use file::{FileWriter, PPMFile};
 use objects::Scene;
-use once_cell::sync::OnceCell;
+use std::io::Write;
+use std::sync::OnceLock;
 use structs::{Point3, Vec3};
 
 /// A struct for the caller to pass all user-defined arguments.
+#[derive(Debug)]
 pub struct Options {
     pub scene: Scene,
     pub width: u16,
@@ -26,7 +27,7 @@ pub struct Options {
 /// An enum for passing field-of-view in degrees in any axis we want.
 /// The other axis would be calculated based on the aspect ratio, which in turn
 /// is calculated from `WIDTH` and `HEIGHT`.
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum FOV {
     Vertical(f64),
     Horizontal(f64),
@@ -39,25 +40,25 @@ pub enum FOV {
 
 // Width and height of the rendered image.
 // The dimensions of the viewport are calculated using field-of-view data.
-static WIDTH: OnceCell<u16> = OnceCell::new();
-static HEIGHT: OnceCell<u16> = OnceCell::new();
+static WIDTH: OnceLock<u16> = OnceLock::new();
+static HEIGHT: OnceLock<u16> = OnceLock::new();
 
 /// The scene itself.
-static SCENE: OnceCell<Scene> = OnceCell::new();
+static SCENE: OnceLock<Scene> = OnceLock::new();
 
 /// Vertical or horizontal field of view in degrees.
-static FIELD_OF_VIEW: OnceCell<FOV> = OnceCell::new();
+static FIELD_OF_VIEW: OnceLock<FOV> = OnceLock::new();
 /// Max. no of bounces a ray can have before it just turns black.
-static MAX_BOUNCES: OnceCell<u8> = OnceCell::new();
+static MAX_BOUNCES: OnceLock<u8> = OnceLock::new();
 /// Max. no of samples. More samples give a more "smooth" look but are more compute-intensive.
-static SAMPLES: OnceCell<u16> = OnceCell::new();
+static SAMPLES: OnceLock<u16> = OnceLock::new();
 
 /// The camera's assumed center.
-static LOOK_FROM: OnceCell<Point3> = OnceCell::new();
+static LOOK_FROM: OnceLock<Point3> = OnceLock::new();
 /// The point the camera is looking at.
-static LOOK_TO: OnceCell<Point3> = OnceCell::new();
+static LOOK_TO: OnceLock<Point3> = OnceLock::new();
 /// What direction is up, usually case positive y-axis.
-static VUP: OnceCell<Vec3> = OnceCell::new();
+static VUP: OnceLock<Vec3> = OnceLock::new();
 
 //? A really good but compute-heavy scene.
 //todo! examples/ with this scene
@@ -115,26 +116,21 @@ static VUP: OnceCell<Vec3> = OnceCell::new();
     scene
 }); */
 
-pub fn run(opts: Options) {
+pub fn run(opts: Options, writer: &mut dyn Write) {
     // Initialize the OnceCell statics.
     // These shouldn't fail (hopefully).
-    WIDTH.set(opts.width).unwrap();
-    HEIGHT.set(opts.height).unwrap();
-    FIELD_OF_VIEW.set(opts.fov).unwrap();
-    MAX_BOUNCES.set(opts.max_bounces).unwrap();
-    SAMPLES.set(opts.samples).unwrap();
-    LOOK_FROM.set(opts.look_from).unwrap();
-    LOOK_TO.set(opts.look_to).unwrap();
-    VUP.set(opts.vup).unwrap();
-    SCENE.set(opts.scene).unwrap();
+    WIDTH.get_or_init(|| opts.width);
+    HEIGHT.get_or_init(|| opts.height);
+    FIELD_OF_VIEW.get_or_init(|| opts.fov);
+    MAX_BOUNCES.get_or_init(|| opts.max_bounces);
+    SAMPLES.get_or_init(|| opts.samples);
+    LOOK_FROM.get_or_init(|| opts.look_from);
+    LOOK_TO.get_or_init(|| opts.look_to);
+    VUP.get_or_init(|| opts.vup);
+    SCENE.get_or_init(|| opts.scene);
 
     // Init camera
     let camera = Camera::new();
-
-    // Init output file
-    let mut file = PPMFile::new("output.ppm");
-    // Get the writer (to be used with `write!` macro)
-    let writer = file.writer();
 
     // Render ahoy!
     camera.render(writer);

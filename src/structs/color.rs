@@ -2,7 +2,7 @@
 
 use std::ops::{Add, AddAssign, Div, Mul};
 
-use rand::Rng;
+use rand::{Rng};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Color {

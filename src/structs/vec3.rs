@@ -1,7 +1,7 @@
 //! Structures representing a point and vector in 3D space.
 
 use super::Interval;
-use rand::Rng;
+use rand::{Rng};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Debug, Copy)]

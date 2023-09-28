@@ -442,7 +442,6 @@ name = "raytracing"
 version = "0.1.0"
 dependencies = [
  "criterion",
- "once_cell",
  "rand",
  "rayon",
 ]

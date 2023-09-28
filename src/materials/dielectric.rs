@@ -3,7 +3,7 @@ use crate::{
     objects::HitData,
     structs::{Color, Ray, Vec3},
 };
-use rand::Rng;
+use rand::{Rng};
 
 /// Structure representing a dielectric surface.
 ///

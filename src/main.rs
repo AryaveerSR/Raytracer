@@ -1,5 +1,6 @@
 use raytracing::{
     self, color,
+    file::{FileWriter, PPMFile},
     materials::{Dielectric, Lambertian, Metal},
     objects::{Scene, Sphere},
     point3, vec3, Options, FOV,
@@ -49,9 +50,12 @@ fn main() {
         samples: 20,
     };
 
+    let mut file = PPMFile::new("output.ppm", 800, 400);
+    let writer = file.writer();
+
     println!("Starting raytracer... ");
 
-    raytracing::run(opts);
+    raytracing::run(opts, writer);
 
     println!("Finished in {}s", start_time.elapsed().as_secs());
 }
