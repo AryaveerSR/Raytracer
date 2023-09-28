@@ -1,6 +1,6 @@
 use crate::{
     materials::Material,
-    structs::{HitData, Interval, Ray},
+    structs::{HitData, Interval, Ray, AABB},
 };
 use std::sync::Arc;
 
@@ -9,6 +9,7 @@ use std::sync::Arc;
 pub trait Object: std::fmt::Debug {
     fn does_hit(&self, ray: Ray, interval: Interval, time: f64) -> Option<HitData>;
     fn material(&self) -> Arc<dyn Material + Sync + Send>;
+    fn bounding_box(&self) -> &AABB;
 }
 
 mod sphere;

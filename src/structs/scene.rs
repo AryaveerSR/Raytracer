@@ -1,14 +1,16 @@
 use super::{HitData, Interval, Ray};
-use crate::objects::Object;
+use crate::{objects::Object, structs::AABB};
 
 /// A struct defining the scene.
 #[derive(Debug)]
 pub struct Scene {
     objects: Vec<Box<dyn Object + Sync + Send>>,
+    bounding_box: AABB,
 }
 
 impl Scene {
     pub fn add(&mut self, obj: Box<dyn Object + Sync + Send>) {
+        self.bounding_box += obj.bounding_box();
         self.objects.push(obj);
     }
 
@@ -32,8 +34,15 @@ impl Scene {
         hit_data
     }
 
+    pub fn bounding_box(&self) -> &AABB {
+        &self.bounding_box
+    }
+
     pub fn new() -> Self {
-        Scene { objects: vec![] }
+        Scene {
+            objects: vec![],
+            bounding_box: AABB::default(),
+        }
     }
 }
 

@@ -38,6 +38,13 @@ impl Interval {
         !self.surrounds(t)
     }
 
+    pub fn from_intervals(a: Self, b: Self) -> Self {
+        Self {
+            min: a.min.min(b.min),
+            max: a.max.max(b.max),
+        }
+    }
+
     pub fn clamp<T: Into<f64>>(&self, t: T) -> f64 {
         let t = t.into();
 
@@ -50,6 +57,10 @@ impl Interval {
         }
     }
 
+    pub fn size(&self) -> f64 {
+        self.max - self.min
+    }
+
     pub fn to_range(&self) -> RangeInclusive<f64> {
         self.min..=self.max
     }
@@ -59,6 +70,12 @@ impl Interval {
             min: min.into(),
             max: max.into(),
         }
+    }
+}
+
+impl Default for Interval {
+    fn default() -> Self {
+        Self { min: 0.0, max: 0.0 }
     }
 }
 

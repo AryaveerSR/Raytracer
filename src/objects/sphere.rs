@@ -1,9 +1,10 @@
 //! A sphere geometry for an object.
 
-use super::{HitData, Object};
+use super::{HitData, Object, AABB};
 use crate::{
     materials::Material,
     structs::{Interval, Point3, Ray, Vec3},
+    vec3, SHUTTER_OPEN_DURATION,
 };
 use std::sync::Arc;
 
@@ -13,6 +14,7 @@ pub struct Sphere {
     center: Point3,
     radius: f64,
     velocity: Vec3,
+    bounding_box: AABB,
     material: Arc<dyn Material + Sync + Send>,
 }
 
@@ -23,11 +25,22 @@ impl Sphere {
         material: Arc<dyn Material + Sync + Send>,
         velocity: Vec3,
     ) -> Self {
+        //todo! comments
+
+        let radius = radius.into();
+        let r_vec = vec3!(radius, radius, radius);
+
+        let initial_box = AABB::from_points(center - r_vec, center + r_vec);
+
+        let final_center = center + velocity * *SHUTTER_OPEN_DURATION.get().unwrap();
+        let final_box = AABB::from_points(final_center - r_vec, final_center + r_vec);
+
         Sphere {
             center,
-            radius: radius.into(),
+            radius,
             material,
             velocity,
+            bounding_box: initial_box + final_box,
         }
     }
 }
@@ -35,6 +48,11 @@ impl Sphere {
 impl Object for Sphere {
     fn material(&self) -> Arc<dyn Material + Sync + Send> {
         Arc::clone(&self.material)
+    }
+
+    //todo! comments
+    fn bounding_box(&self) -> &AABB {
+        &self.bounding_box
     }
 
     /// Calculating whether a ray hits the sphere.

@@ -32,7 +32,7 @@ impl Camera {
         println!("Starting computing.");
 
         // Loop through every row of the image.
-        (0..*HEIGHT.get().expect("OnceCell not initialized."))
+        (0..*HEIGHT.get().unwrap())
             .into_par_iter()
             .for_each_with(sender, |s, i| {
                 //? #[cfg(debug_assertions)]
@@ -43,15 +43,13 @@ impl Camera {
 
                 let mut rng = rand::thread_rng();
 
-                let shutter_open_duration = *SHUTTER_OPEN_DURATION
-                    .get()
-                    .expect("OnceCell not initialized");
+                let shutter_open_duration = *SHUTTER_OPEN_DURATION.get().unwrap();
 
                 // For every pixel..
-                for j in 0..*WIDTH.get().expect("OnceCell not initialized.") {
+                for j in 0..*WIDTH.get().unwrap() {
                     let mut color = Color::BLACK;
 
-                    let samples = *SAMPLES.get().expect("OnceCell not initialized.");
+                    let samples = *SAMPLES.get().unwrap();
 
                     // ..go through every sample ray
                     for _ in 0..(samples) {
@@ -60,7 +58,7 @@ impl Camera {
                         // add it to the `color` variable
                         color += Camera::ray_color(
                             ray,
-                            *MAX_BOUNCES.get().expect("OnceCell not initialized."),
+                            *MAX_BOUNCES.get().unwrap(),
                             rng.gen_range(0.0..=shutter_open_duration),
                         );
                     }
@@ -85,7 +83,7 @@ impl Camera {
         #[cfg(debug_assertions)]
         println!("Starting writing");
 
-        while current_pending_row < *HEIGHT.get().expect("OnceCell not initialized.") {
+        while current_pending_row < *HEIGHT.get().unwrap() {
             //? #[cfg(debug_assertions)]
             //? println!("Waiting for row {}", current_pending_row);
 
@@ -128,7 +126,7 @@ impl Camera {
     /// Each time its called (which should be equal to the no. of samples),
     /// it will randomize by a bit (see `pixel_sample_square()`)
     fn get_ray(&self, i: u16, j: u16, rng: &mut ThreadRng) -> Ray {
-        let look_from = *LOOK_FROM.get().expect("OnceCell not initialized.");
+        let look_from = *LOOK_FROM.get().unwrap();
 
         let pixel_center =
             self.first_pixel + (self.pixel_delta_u * j as f64) + (self.pixel_delta_v * i as f64);
@@ -163,7 +161,7 @@ impl Camera {
         // PS: https://stackoverflow.com/questions/36908835/what-causes-shadow-acne
         match SCENE
             .get()
-            .expect("OnceCell initialization failed")
+            .unwrap()
             .does_hit(ray, interval!(0.01, f64::INFINITY), time)
         {
             // If the ray does hit, get the hit data.
@@ -198,11 +196,11 @@ impl Camera {
     /// Constructor for a camera.
     pub fn new() -> Self {
         // Static variables used repeatedly in this function.
-        let width = WIDTH.get().expect("OnceCell not initialized.");
-        let height = HEIGHT.get().expect("OnceCell not initialized.");
-        let look_from = *LOOK_FROM.get().expect("OnceCell not initialized.");
-        let look_to = *LOOK_TO.get().expect("OnceCell not initialized.");
-        let vup = *VUP.get().expect("OnceCell not initialized.");
+        let width = WIDTH.get().unwrap();
+        let height = HEIGHT.get().unwrap();
+        let look_from = *LOOK_FROM.get().unwrap();
+        let look_to = *LOOK_TO.get().unwrap();
+        let vup = *VUP.get().unwrap();
 
         // Calculate focal length.
         // This is possible as `LOOK_TO` is a point and not a direction (which it normally should be),
@@ -217,7 +215,7 @@ impl Camera {
         // or it can have the horizontal fov, which can be multiplied by the aspect ratio to get the
         // vertical fov.
         let vertical_fov = {
-            match *FIELD_OF_VIEW.get().expect("OnceCell not initialized.") {
+            match *FIELD_OF_VIEW.get().unwrap() {
                 FOV::Vertical(fov) => fov,
                 FOV::Horizontal(fov) => fov * (*width as f64) / (*height as f64),
             }

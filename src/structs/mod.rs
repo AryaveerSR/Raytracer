@@ -1,3 +1,5 @@
+mod aabb;
+mod bvh;
 mod color;
 mod hit_data;
 mod interval;
@@ -5,6 +7,8 @@ mod ray;
 mod scene;
 mod vec3;
 
+pub use aabb::AABB;
+pub use bvh::BVHNode;
 pub use color::Color;
 pub use hit_data::HitData;
 pub use interval::Interval;

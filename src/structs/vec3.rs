@@ -26,6 +26,15 @@ impl Vec3 {
         self.2
     }
 
+    /// Get component of the vector along an axis;
+    pub fn axis<T: Into<u8>>(&self, axis: T) -> f64 {
+        match axis.into() {
+            0 => self.0,
+            1 => self.1,
+            _ => self.2,
+        }
+    }
+
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
     }
@@ -220,20 +229,3 @@ impl Neg for Vec3 {
         Self(-self.0, -self.1, -self.2)
     }
 }
-
-//? The index way of accessing x,y and z values results
-//? in un-idiomatic code. Use `.x()`, `.y()` or `.z()` instead.
-/*
-impl Index<u8> for Vec3 {
-    type Output = f64;
-
-    fn index(&self, index: u8) -> &Self::Output {
-        match index {
-            0 => &self.0,
-            1 => &self.1,
-            2 => &self.2,
-            _ => panic!("Out of bounds"),
-        }
-    }
-}
-*/
