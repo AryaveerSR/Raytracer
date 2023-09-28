@@ -6,7 +6,7 @@ use crate::{
     structs::{Color, Interval, Point3, Ray, Vec3},
     FIELD_OF_VIEW, FOV, HEIGHT, LOOK_FROM, LOOK_TO, MAX_BOUNCES, SAMPLES, SCENE, VUP, WIDTH,
 };
-use rand::Rng;
+use rand::{rngs::ThreadRng, Rng};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use std::{
     collections::HashMap,
@@ -42,6 +42,8 @@ impl Camera {
                 // The entire row stored as a vector of color.
                 let mut pixels = vec![];
 
+                let mut rng = rand::thread_rng();
+
                 // For every pixel..
                 for j in 0..*WIDTH.get().expect("OnceCell not initialized.") {
                     let mut color = Color::BLACK;
@@ -51,7 +53,7 @@ impl Camera {
                     // ..go through every sample ray
                     for _ in 0..(samples) {
                         // get the color
-                        let ray = self.get_ray(i, j);
+                        let ray = self.get_ray(i, j, &mut rng);
                         // add it to the `color` variable
                         color += Camera::ray_color(
                             ray,
@@ -122,13 +124,13 @@ impl Camera {
     ///
     /// Each time its called (which should be equal to the no. of samples),
     /// it will randomize by a bit (see `pixel_sample_square()`)
-    fn get_ray(&self, i: u16, j: u16) -> Ray {
+    fn get_ray(&self, i: u16, j: u16, rng: &mut ThreadRng) -> Ray {
         let look_from = *LOOK_FROM.get().expect("OnceCell not initialized.");
 
         let pixel_center =
             self.first_pixel + (self.pixel_delta_u * j as f64) + (self.pixel_delta_v * i as f64);
 
-        let pixel_sample = pixel_center + self.pixel_sample_square();
+        let pixel_sample = pixel_center + self.pixel_sample_square(rng);
 
         let ray_direction = pixel_sample - look_from;
         Ray::new(look_from, ray_direction)
@@ -136,9 +138,7 @@ impl Camera {
 
     /// Generate a random offset for a pixel to sample randomly.
     /// The range ensures that the sampled pixel would be between the original pixel and its surrounding pixels.
-    fn pixel_sample_square(&self) -> Vec3 {
-        let mut rng = rand::thread_rng();
-
+    fn pixel_sample_square(&self, rng: &mut ThreadRng) -> Vec3 {
         let px = rng.gen_range(-0.5..0.5);
         let py = rng.gen_range(-0.5..0.5);
 
