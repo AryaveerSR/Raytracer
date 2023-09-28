@@ -4,6 +4,6 @@
 
 ## A raytracing-based renderer. (in rust)
 
-[![MIT](https://img.shields.io/crates/l/bitvec.svg?style=for-the-badge)](LICENSE)
+[![MIT](https://img.shields.io/crates/l/bitvec.svg?style=for-the-badge)](LICENSE.md)
 
 </div>
