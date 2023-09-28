@@ -20,21 +20,25 @@ fn main() {
             point3!(0, -100.5, -1),
             100,
             Arc::new(Lambertian::new(color!(205, 205, 0))),
+            vec3!(0, 0, 0),
         )));
         scene.add(Box::new(Sphere::new(
             point3!(0, 0, -1),
             0.5,
             Arc::new(Lambertian::new(color!(180, 77, 77))),
+            vec3!(0, 3, 0),
         )));
         scene.add(Box::new(Sphere::new(
             point3!(-1, 0, -1),
             0.5,
             Arc::new(Dielectric::new(1.5)),
+            vec3!(0, 0, 0),
         )));
         scene.add(Box::new(Sphere::new(
             point3!(1, 0, -1),
             0.5,
             Arc::new(Metal::new(color!(204, 204, 204), 0.1)),
+            vec3!(0, 0, 0),
         )));
 
         scene
@@ -50,6 +54,7 @@ fn main() {
         vup: vec3!(0.0, 1.0, 0.0),
         max_bounces: 20,
         samples: 20,
+        shutter_open_duration: 1.0 / 24.0, // 24 FPS
     };
 
     let mut file = PPMFile::new("output.ppm", 800, 400);

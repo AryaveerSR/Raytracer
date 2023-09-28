@@ -4,7 +4,8 @@ use crate::{
     file::FileWriter,
     interval,
     structs::{Color, Interval, Point3, Ray, Vec3},
-    FIELD_OF_VIEW, FOV, HEIGHT, LOOK_FROM, LOOK_TO, MAX_BOUNCES, SAMPLES, SCENE, VUP, WIDTH,
+    FIELD_OF_VIEW, FOV, HEIGHT, LOOK_FROM, LOOK_TO, MAX_BOUNCES, SAMPLES, SCENE,
+    SHUTTER_OPEN_DURATION, VUP, WIDTH,
 };
 use rand::{rngs::ThreadRng, Rng};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
@@ -30,8 +31,6 @@ impl Camera {
         #[cfg(debug_assertions)]
         println!("Starting computing.");
 
-        //todo! WGPU: using compute for this.
-
         // Loop through every row of the image.
         (0..*HEIGHT.get().expect("OnceCell not initialized."))
             .into_par_iter()
@@ -43,6 +42,10 @@ impl Camera {
                 let mut pixels = vec![];
 
                 let mut rng = rand::thread_rng();
+
+                let shutter_open_duration = *SHUTTER_OPEN_DURATION
+                    .get()
+                    .expect("OnceCell not initialized");
 
                 // For every pixel..
                 for j in 0..*WIDTH.get().expect("OnceCell not initialized.") {
@@ -58,6 +61,7 @@ impl Camera {
                         color += Camera::ray_color(
                             ray,
                             *MAX_BOUNCES.get().expect("OnceCell not initialized."),
+                            rng.gen_range(0.0..=shutter_open_duration),
                         );
                     }
 
@@ -112,7 +116,6 @@ impl Camera {
         }
     }
 
-    //todo! A general method to call for the file, instead of just assuming its a PPM
     /// Function to write a vector of colors to the file.
     fn write_row(row: Arc<Vec<Color>>, file_writer: &mut dyn FileWriter) {
         for pixel in row.iter() {
@@ -146,7 +149,7 @@ impl Camera {
     }
 
     /// Function that takes a ray, checks for hits and returns the appropriate color to display.
-    fn ray_color(ray: Ray, bounces: u8) -> Color {
+    fn ray_color(ray: Ray, bounces: u8, time: f64) -> Color {
         // If it bounces eternally (the bounce threshold), just return black.
         if bounces == 0 {
             return Color::BLACK;
@@ -161,7 +164,7 @@ impl Camera {
         match SCENE
             .get()
             .expect("OnceCell initialization failed")
-            .does_hit(ray, interval!(0.1, f64::INFINITY))
+            .does_hit(ray, interval!(0.01, f64::INFINITY), time)
         {
             // If the ray does hit, get the hit data.
             Some(hit) => {
@@ -178,7 +181,7 @@ impl Camera {
                 //
                 // For every bounce off a surface, multiply it with the (`albedo` / 255) of the material
                 // and the color from the next bounce/sky.
-                let ray_color = Self::ray_color(ray, bounces - 1);
+                let ray_color = Self::ray_color(ray, bounces - 1, time);
                 (albedo * ray_color) / 255
             }
             // If the ray doesn't hit anything, this draws a sky.

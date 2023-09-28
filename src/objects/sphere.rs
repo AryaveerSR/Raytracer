@@ -3,7 +3,7 @@
 use super::{HitData, Object};
 use crate::{
     materials::Material,
-    structs::{Interval, Point3, Ray},
+    structs::{Interval, Point3, Ray, Vec3},
 };
 use std::sync::Arc;
 
@@ -12,6 +12,7 @@ use std::sync::Arc;
 pub struct Sphere {
     center: Point3,
     radius: f64,
+    velocity: Vec3,
     material: Arc<dyn Material + Sync + Send>,
 }
 
@@ -20,11 +21,13 @@ impl Sphere {
         center: Point3,
         radius: T,
         material: Arc<dyn Material + Sync + Send>,
+        velocity: Vec3,
     ) -> Self {
         Sphere {
             center,
             radius: radius.into(),
             material,
+            velocity,
         }
     }
 }
@@ -35,8 +38,9 @@ impl Object for Sphere {
     }
 
     /// Calculating whether a ray hits the sphere.
-    fn does_hit(&self, ray: Ray, interval: Interval) -> Option<HitData> {
-        let distance = ray.origin() - self.center;
+    fn does_hit(&self, ray: Ray, interval: Interval, time: f64) -> Option<HitData> {
+        let center = self.center + self.velocity * time;
+        let distance = ray.origin() - center;
 
         let a = ray.direction().length_squared();
         let b = distance.dot(ray.direction());
@@ -58,7 +62,7 @@ impl Object for Sphere {
             }
         }
 
-        let outward_normal = (ray.at(root) - self.center) / self.radius;
+        let outward_normal = (ray.at(root) - center) / self.radius;
 
         let is_front_face = ray.direction().dot(outward_normal) < 0.0;
         let normal = match is_front_face {

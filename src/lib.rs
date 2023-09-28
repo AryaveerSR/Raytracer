@@ -21,6 +21,7 @@ pub struct Options {
     pub vup: Vec3,
     pub max_bounces: u8,
     pub samples: u16,
+    pub shutter_open_duration: f64,
 }
 
 /// An enum for passing field-of-view in degrees in any axis we want.
@@ -45,8 +46,6 @@ static HEIGHT: OnceLock<u16> = OnceLock::new();
 /// The scene itself.
 static SCENE: OnceLock<Scene> = OnceLock::new();
 
-/// Vertical or horizontal field of view in degrees.
-static FIELD_OF_VIEW: OnceLock<FOV> = OnceLock::new();
 /// Max. no of bounces a ray can have before it just turns black.
 static MAX_BOUNCES: OnceLock<u8> = OnceLock::new();
 /// Max. no of samples. More samples give a more "smooth" look but are more compute-intensive.
@@ -58,6 +57,10 @@ static LOOK_FROM: OnceLock<Point3> = OnceLock::new();
 static LOOK_TO: OnceLock<Point3> = OnceLock::new();
 /// What direction is up, usually case positive y-axis.
 static VUP: OnceLock<Vec3> = OnceLock::new();
+/// Vertical or horizontal field of view in degrees.
+static FIELD_OF_VIEW: OnceLock<FOV> = OnceLock::new();
+/// The duration the camera's shutter is open (for motion blur);
+static SHUTTER_OPEN_DURATION: OnceLock<f64> = OnceLock::new();
 
 //? A really good but compute-heavy scene.
 //todo! examples/ with this scene
@@ -127,6 +130,7 @@ pub fn run(opts: Options, file_writer: &mut dyn FileWriter) {
     LOOK_TO.get_or_init(|| opts.look_to);
     VUP.get_or_init(|| opts.vup);
     SCENE.get_or_init(|| opts.scene);
+    SHUTTER_OPEN_DURATION.get_or_init(|| opts.shutter_open_duration);
 
     // Init camera
     let camera = Camera::new();
