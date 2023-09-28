@@ -5,10 +5,9 @@ pub mod objects;
 pub mod structs;
 
 use camera::Camera;
-use objects::Scene;
-use std::io::Write;
+use file::FileWriter;
 use std::sync::OnceLock;
-use structs::{Point3, Vec3};
+use structs::{Point3, Scene, Vec3};
 
 /// A struct for the caller to pass all user-defined arguments.
 #[derive(Debug)]
@@ -116,7 +115,7 @@ static VUP: OnceLock<Vec3> = OnceLock::new();
     scene
 }); */
 
-pub fn run(opts: Options, writer: &mut dyn Write) {
+pub fn run(opts: Options, file_writer: &mut dyn FileWriter) {
     // Initialize the OnceCell statics.
     // These shouldn't fail (hopefully).
     WIDTH.get_or_init(|| opts.width);
@@ -133,5 +132,5 @@ pub fn run(opts: Options, writer: &mut dyn Write) {
     let camera = Camera::new();
 
     // Render ahoy!
-    camera.render(writer);
+    camera.render(file_writer);
 }

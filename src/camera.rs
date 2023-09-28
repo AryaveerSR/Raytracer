@@ -1,6 +1,7 @@
 //! Implementation of camera (rendering the scene).
 
 use crate::{
+    file::FileWriter,
     interval,
     structs::{Color, Interval, Point3, Ray, Vec3},
     FIELD_OF_VIEW, FOV, HEIGHT, LOOK_FROM, LOOK_TO, MAX_BOUNCES, SAMPLES, SCENE, VUP, WIDTH,
@@ -9,7 +10,6 @@ use rand::Rng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use std::{
     collections::HashMap,
-    io::Write,
     sync::{mpsc, Arc},
 };
 
@@ -23,7 +23,7 @@ pub struct Camera {
 
 impl Camera {
     /// The main render function that does frankly everything.
-    pub fn render(&self, writer: &mut dyn Write) {
+    pub fn render(&self, file_writer: &mut dyn FileWriter) {
         // A receiver and (about to be cloned a lot) sender to send back the results of each compute.
         let (sender, receiver) = mpsc::channel::<(u16, Arc<Vec<Color>>)>();
 
@@ -83,41 +83,38 @@ impl Camera {
             //? #[cfg(debug_assertions)]
             //? println!("Waiting for row {}", current_pending_row);
 
-            // Try receiving a row.
-            let received_row = receiver.try_recv();
-
-            if received_row.is_ok() {
-                let (i, row) = received_row.unwrap();
-
-                // Check if the received row is the one we need.
-                if i == current_pending_row {
-                    // Write it to the file
-                    Self::write_row(row, writer);
-                    current_pending_row += 1;
-                } else {
-                    // Put it in the waiting list
-                    row_hashes.insert(i, row);
+            match receiver.try_recv() {
+                Ok((i, row)) => {
+                    // Check if the received row is the one we need.
+                    if i == current_pending_row {
+                        // Write it to the file
+                        Self::write_row(row, file_writer);
+                        current_pending_row += 1;
+                    } else {
+                        // Put it in the waiting list
+                        row_hashes.insert(i, row);
+                    }
                 }
-            } else {
-                // Check if the row we need is now on the hashmap
-                if row_hashes.contains_key(&current_pending_row) {
-                    // Remove the row from the hashmap, since its turn has arrived..
-                    let row = row_hashes.remove(&current_pending_row).unwrap();
+                Err(_) => {
+                    // Check if the row we need is now on the hashmap
+                    if row_hashes.contains_key(&current_pending_row) {
+                        // Remove the row from the hashmap, since its turn has arrived..
+                        let row = row_hashes.remove(&current_pending_row).unwrap();
 
-                    // ..and write it.
-                    Self::write_row(row, writer);
-                    current_pending_row += 1;
+                        // ..and write it.
+                        Self::write_row(row, file_writer);
+                        current_pending_row += 1;
+                    }
                 }
-            }
+            };
         }
     }
 
     //todo! A general method to call for the file, instead of just assuming its a PPM
     /// Function to write a vector of colors to the file.
-    fn write_row(row: Arc<Vec<Color>>, writer: &mut dyn Write) {
+    fn write_row(row: Arc<Vec<Color>>, file_writer: &mut dyn FileWriter) {
         for pixel in row.iter() {
-            writeln!(writer, "{} {} {}", pixel.r(), pixel.g(), pixel.b())
-                .expect("Writing a row failed.");
+            file_writer.write(*pixel);
         }
     }
 
@@ -151,7 +148,7 @@ impl Camera {
     /// Function that takes a ray, checks for hits and returns the appropriate color to display.
     fn ray_color(ray: Ray, bounces: u8) -> Color {
         // If it bounces eternally (the bounce threshold), just return black.
-        if bounces <= 0 {
+        if bounces == 0 {
             return Color::BLACK;
         }
 
@@ -252,11 +249,11 @@ impl Camera {
         let pixel_delta_v = viewport_v / *height;
 
         // The starting postion for the viewport.
-        let viewport_top_left =
+        let viewport_lower_left =
             look_from - (w * focal_length) - (viewport_u / 2.0) - (viewport_v / 2.0);
 
         // The position of the first pixel's center (considering them as points on a grid instead of little squares)
-        let first_pixel = viewport_top_left + (pixel_delta_u + pixel_delta_v) * 0.5_f64;
+        let first_pixel = viewport_lower_left + (pixel_delta_u + pixel_delta_v) * 0.5_f64;
 
         Camera {
             pixel_delta_u,

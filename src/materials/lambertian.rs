@@ -1,8 +1,5 @@
 use super::{commons::random_unit_vector, Material};
-use crate::{
-    objects::HitData,
-    structs::{Color, Ray},
-};
+use crate::structs::{Color, HitData, Ray};
 
 /// Structure representing a lambertian surface, which is a type of an ideal "matte" surface.
 ///

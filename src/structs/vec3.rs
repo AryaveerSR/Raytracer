@@ -1,13 +1,13 @@
 //! Structures representing a point and vector in 3D space.
 
 use super::Interval;
-use rand::{Rng};
+use rand::Rng;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Debug, Copy)]
 pub struct Vec3(f64, f64, f64);
 
-// A point and a vector are basically the same, and would often be used interchangeably,
+// A point and a vector are basically the same, and are often used interchangeably,
 // but its still good to have different types for code clarity.
 pub type Point3 = Vec3;
 

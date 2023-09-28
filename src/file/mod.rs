@@ -1,10 +1,9 @@
 //! Abstractions for interacting with image files.
 
-use std::io;
+use crate::structs::Color;
 
 pub trait FileWriter {
-    fn writer(&mut self) -> &mut dyn io::Write;
-    fn new(file: &str, width: u16, height: u16) -> Self;
+    fn write(&mut self, color: Color);
 }
 
 mod ppm;

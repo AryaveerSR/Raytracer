@@ -1,7 +1,4 @@
-use crate::{
-    objects::HitData,
-    structs::{Color, Ray},
-};
+use crate::structs::{Color, HitData, Ray};
 
 pub trait Material: std::fmt::Debug {
     fn scatter(&self, hit: HitData, ray: Ray) -> (Ray, Color);

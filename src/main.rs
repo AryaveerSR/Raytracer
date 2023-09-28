@@ -1,9 +1,11 @@
 use raytracing::{
     self, color,
-    file::{FileWriter, PPMFile},
+    file::PPMFile,
     materials::{Dielectric, Lambertian, Metal},
-    objects::{Scene, Sphere},
-    point3, vec3, Options, FOV,
+    objects::Sphere,
+    point3,
+    structs::Scene,
+    vec3, Options, FOV,
 };
 use std::{sync::Arc, time::Instant};
 
@@ -39,7 +41,7 @@ fn main() {
     };
 
     let opts = Options {
-        scene: scene,
+        scene,
         width: 800,
         height: 400,
         fov: FOV::Vertical(50.0),
@@ -51,11 +53,10 @@ fn main() {
     };
 
     let mut file = PPMFile::new("output.ppm", 800, 400);
-    let writer = file.writer();
 
     println!("Starting raytracer... ");
 
-    raytracing::run(opts, writer);
+    raytracing::run(opts, &mut file);
 
     println!("Finished in {}s", start_time.elapsed().as_secs());
 }

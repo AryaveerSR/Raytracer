@@ -1,9 +1,6 @@
 use super::Material;
-use crate::{
-    objects::HitData,
-    structs::{Color, Ray, Vec3},
-};
-use rand::{Rng};
+use crate::structs::{Color, HitData, Ray, Vec3};
+use rand::Rng;
 
 /// Structure representing a dielectric surface.
 ///
