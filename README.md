@@ -8,4 +8,5 @@
 
 </div>
 
-![Uploading image.png…]()
+![image](https://github.com/AryaveerSR/Raytracer/assets/51504825/52ea78fe-7461-4521-b18a-2854c19976dd)
+
